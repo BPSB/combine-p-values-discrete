@@ -78,7 +78,7 @@ For discrete tests, we have different null distributions for each test, which th
 This module allows you to obtain and store the null distribution for a single test, using either provided functions for common tests or building such functions yourself.
 The framework then allows you to combine test results with each other, convolving the respective null distributions, and finally obtain the combined *p* value.
 If you have continuous tests in the mix, you can also include them.
-At the core is the class `CombinedTestResult`, instances of which stores single tests result with their null distributions or combinations thereof.
+At the core is the class `CTR` ("Combined Test Result”), instances of which stores single tests result with their null distributions or combinations thereof.
 Two instances can be combined with simple Python multiplication (i.e., what the `*` operator does).
 
 
@@ -92,7 +92,7 @@ Command reference
 -----------------
 
 .. automodule:: combine_pvalues_discrete
-	:members: CombinedTestResult, LogPDist, tree_prod, sign_test
+	:members: CTR, LogPDist, tree_prod, sign_test
 
 
 

@@ -3,21 +3,21 @@ from itertools import count
 import numpy as np
 from scipy.stats import mannwhitneyu, uniform, ks_1samp
 
-from combine_pvalues_discrete.ctr import CombinedTestResult
+from combine_pvalues_discrete.ctr import CTR
 from combine_pvalues_discrete.tools import tree_prod
 
 # All MWU tests occur with the alternative "less".
 
 def test_simplest_case():
 	assert (
-		CombinedTestResult.from_mann_whitney_u([0],[1],alternative="less",density=1000)
+		CTR.from_mann_whitney_u([0],[1],alternative="less",density=1000)
 		==
-		CombinedTestResult.from_discrete_test( 0.5, [0.5,1.0] )
+		CTR.from_discrete_test( 0.5, [0.5,1.0] )
 	)
 
 def combine_mwus( pairs, **kwargs ):
 	return tree_prod(
-			CombinedTestResult.from_mann_whitney_u(X,Y,**kwargs)
+			CTR.from_mann_whitney_u(X,Y,**kwargs)
 			for X,Y in pairs
 		).combined_p
 

@@ -26,7 +26,7 @@ def searchsorted_closest(array,values):
 
 def tree_prod(factors):
 	"""
-	Returns the product of `factors` with sub-results being combined in a tree-like manner as opposed to a sequential one: First products of pairs are computed, then pairs of pairs, and so on. This may reduce the computing time and increase the accuracy when multiplying `CombinedTestResults`s. Returns `1` if `factors` is empty.
+	Returns the product of `factors` with sub-results being combined in a tree-like manner as opposed to a sequential one: First products of pairs are computed, then pairs of pairs, and so on. This may reduce the computing time and increase the accuracy when multiplying `CTRs`s. Returns `1` if `factors` is empty.
 	
 	Parameters
 	----------

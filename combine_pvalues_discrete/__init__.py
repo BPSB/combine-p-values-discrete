@@ -1,6 +1,6 @@
 from .tools import tree_prod, sign_test
 from .logpdist import LogPDist
-from .ctr import CombinedTestResult
+from .ctr import CTR
 
 try:
 	from .version import version as __version__

@@ -7,9 +7,11 @@ from .logpdist import LogPDist
 
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
 
-class CombinedTestResult(object):
+class CTR(object):
 	"""
-	Represents a single test result or combination thereof. You usually do not want to use the default constructor but one of the class methods `from_discrete_test` or `from_continuous_test`.
+	CTR = combined test result
+	
+	Represents a single test result or combination thereof. You usually do not want to use the default constructor but one of the class methods for a specific or generic test.
 	
 	Multiplying instances of this class (using the `*` operator or similar) combines the respective results.
 	
@@ -29,7 +31,7 @@ class CombinedTestResult(object):
 	
 	def __mul__(self,other):
 		if is_unity(other): return self
-		return CombinedTestResult( self.logp+other.logp, self.nulldist*other.nulldist )
+		return CTR( self.logp+other.logp, self.nulldist*other.nulldist )
 	
 	__rmul__ = __mul__
 	
