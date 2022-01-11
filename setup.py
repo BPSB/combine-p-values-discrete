@@ -9,7 +9,7 @@ setup(
 		long_description = open("README.md", encoding="utf8").read(),
 		python_requires = ">=3.7",
 		packages = ["combine_pvalues_discrete"],
-		install_requires = ["numpy","scipy"],
+		install_requires = ["numpy","scipy>1.7.0"],
 		setup_requires = ["setuptools_scm","pytest-runner"],
 		tests_require = ["pytest","statsmodels"],
 		use_scm_version = {"write_to": "combine_pvalues_discrete/version.py"},
