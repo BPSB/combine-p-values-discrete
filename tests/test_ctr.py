@@ -2,12 +2,11 @@ from pytest import mark, raises
 from itertools import chain, product, combinations_with_replacement
 import numpy as np
 
-from statsmodels.stats.descriptivestats import sign_test
 from scipy.stats import combine_pvalues
 
 from combine_pvalues_discrete.logpdist import LogPDist
 from combine_pvalues_discrete.ctr import CombinedTestResult
-from combine_pvalues_discrete.tools import tree_prod
+from combine_pvalues_discrete.tools import tree_prod, sign_test
 
 examples = [
 	CombinedTestResult( 0.5, LogPDist.uniform_from_ps([0.5,    1]) ),
@@ -36,26 +35,19 @@ def test_from_discrete_test(example):
 
 # Reproducing a sign test by combining single comparisons:
 
-# only works properly for one side:
-orig_sign_test_onesided = lambda X,Y: sign_test(Y-X)[1]/2
-
 def my_sign_test_onesided(X,Y):
 	return tree_prod(
 		CombinedTestResult.from_discrete_test( 0.5 if x<y else 1, [0.5,1.0] )
 		for x,y in zip(X,Y)
 	).combined_p
 
-sign_tests = [ orig_sign_test_onesided, my_sign_test_onesided ]
+sign_tests = [ lambda X,Y:sign_test(X,Y)[0], my_sign_test_onesided ]
 
 @mark.parametrize( "n,replicate", product( range(2,15), range(20) ) )
 def test_comparison_to_sign_test(n,replicate):
 	n = 13
 	X = np.random.random(n)
 	Y = np.random.random(n)
-	
-	# Because there is no readily available one-sided test:
-	if np.mean(X<Y)<=0.5:
-		X,Y = Y,X
 	
 	p_values = [ test(X,Y) for test in sign_tests ]
 	

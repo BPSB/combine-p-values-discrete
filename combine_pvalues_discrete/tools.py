@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import binomtest
 
 def is_unity(thing):
 	"""
@@ -41,4 +42,24 @@ def tree_prod(factors):
 		return 1
 	else:
 		return tree_prod(factors[:number//2]) * tree_prod(factors[number//2:])
+
+def sign_test(x,y=0,alternative="less"):
+	"""
+	Sign test.
+	
+	**two-sided:**
+	Pass paired samples `x` and `y` as arguments. The tested null hypothesis is that `x[i]` and `y[i]` are from the same distribution (separately for each `i`).
+	
+	**one-sided**
+	Pass a single sample `x` and a number `y`. The tested null hypothesis is that `x` is sampled from a distribution with a median larger than `y`.
+	
+	Returns a tuple consisting of the p value and the number of non-tied samples.
+	"""
+	
+	x = np.asarray(x)
+	y = np.asarray(y)
+	greater = np.sum(x>y)
+	less    = np.sum(x<y)
+	non_tied = less+greater
+	return binomtest( greater, non_tied, alternative=alternative ).pvalue, non_tied
 

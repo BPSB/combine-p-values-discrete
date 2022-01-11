@@ -1,8 +1,10 @@
 from pytest import mark
 import math
 import numpy as np
+from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 
-from combine_pvalues_discrete.tools import is_unity, searchsorted_closest, tree_prod
+from combine_pvalues_discrete.tools import is_unity, searchsorted_closest, tree_prod, sign_test
+
 
 @mark.parametrize(
 		"       thing    , result",
@@ -51,3 +53,40 @@ def test_tree_prod_mult_count(n_factors):
 	product = tree_prod(factors)
 	assert n_factors <= 2**product.mults < 2*n_factors
 
+@mark.parametrize("n",range(1,20))
+def test_signtest_with_statsmodels(n):
+	X = np.random.normal(size=n)
+	
+	p = sign_test(X,alternative="two-sided")[0]
+	p_sm = sm_sign_test(X)[1]
+	
+	Y = np.random.normal(n)
+	p_2s = sign_test(X+Y,Y,alternative="two-sided")[0]
+	
+	np.testing.assert_almost_equal(p,p_sm)
+	assert p == p_2s
+
+@mark.parametrize("n",range(1,20))
+def test_signtest_with_statsmodels_onesided(n):
+	X = np.random.normal(size=n)
+	
+	# Because there is no readily available one-sided test:
+	if np.mean(X>0)>0.5:
+		X = -X
+	elif np.mean(X>0)==0.5:
+		return
+
+	p = sign_test(X,alternative="less")[0]
+	p_sm = sm_sign_test(X)[1]/2
+
+	Y = np.random.normal(n)
+	p_2s = sign_test(X+Y,Y,alternative="less")[0]
+
+	np.testing.assert_almost_equal(p,p_sm)
+	assert p == p_2s
+
+def test_signtest_order():
+	n = 20
+	X = np.zeros(n)
+	Y = np.ones(n)
+	np.testing.assert_almost_equal( sign_test(X,Y,alternative="less")[0], 2**-n )
