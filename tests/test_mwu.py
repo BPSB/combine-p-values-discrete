@@ -5,19 +5,21 @@ from scipy.stats import mannwhitneyu, uniform, ks_1samp
 
 from combine_pvalues_discrete.ctr import CombinedTestResult
 from combine_pvalues_discrete.tools import tree_prod
-from combine_pvalues_discrete.tests import single_mwu
 
 # All MWU tests occur with the alternative "less".
 
 def test_simplest_case():
 	assert (
-		single_mwu([0],[1],alternative="less",density=1000)
+		CombinedTestResult.from_mann_whitney_u([0],[1],alternative="less",density=1000)
 		==
 		CombinedTestResult.from_discrete_test( 0.5, [0.5,1.0] )
 	)
 
 def combine_mwus( pairs, **kwargs ):
-	return tree_prod( single_mwu(X,Y,**kwargs) for X,Y in pairs ).combined_p
+	return tree_prod(
+			CombinedTestResult.from_mann_whitney_u(X,Y,**kwargs)
+			for X,Y in pairs
+		).combined_p
 
 def create_data(RNG,n,max_size=10,trend=0):
 	"""

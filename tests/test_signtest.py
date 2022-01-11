@@ -5,19 +5,21 @@ from scipy.stats import uniform, ks_1samp
 
 from combine_pvalues_discrete.ctr import CombinedTestResult
 from combine_pvalues_discrete.tools import tree_prod, sign_test
-from combine_pvalues_discrete.tests import single_sign_test
 
 # All sign tests occur with the alternative "less".
 
 def test_simplest_case():
 	assert (
-		single_sign_test([0],[1],alternative="less",density=1000)
+		CombinedTestResult.from_sign_test([0],[1],alternative="less",density=1000)
 		==
 		CombinedTestResult.from_discrete_test( 0.5, [0.5,1.0] )
 	)
 
 def combine_sign_tests( pairs, **kwargs ):
-	return tree_prod( single_sign_test(X,Y,**kwargs) for X,Y in pairs ).combined_p
+	return tree_prod(
+			CombinedTestResult.from_sign_test(X,Y,**kwargs)
+			for X,Y in pairs
+		).combined_p
 
 def create_data(RNG,n,max_size=10,trend=0):
 	"""

@@ -1,7 +1,6 @@
 from .tools import tree_prod
 from .logpdist import LogPDist
 from .ctr import CombinedTestResult
-from .tests import single_mwu, single_sign_test
 
 try:
 	from .version import version as __version__
