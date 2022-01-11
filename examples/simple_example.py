@@ -43,7 +43,7 @@ To do this, we only need to multiply the respective `CombinedTestResult` s:
 	:dedent: 1
 	:lines: 10-10
 
-From the combined result, we can directly obtain the compound _p_ value:
+From the combined result, we can directly obtain the compound *p* value:
 
 .. literalinclude:: ../examples/simple_example.py
 	:start-after: example-st\u0061rt
@@ -69,6 +69,6 @@ if __name__ == "__main__":
 	p_C = ttest_rel(C_1,C_2).pvalue
 	result_C = CombinedTestResult.from_continuous_test(p_C)
 	
-	combined_result = result_A*result_B*result_C
+	combined_result = result_A * result_B * result_C
 	print(combined_result.combined_p)
 

@@ -13,7 +13,7 @@ This module has a scope similar to SciPy’s `combine_pvalues`_:
 * There is no straightforward test to apply to the entire dataset.
 * You want a single *p* value for the null hypothesis taking into account the entire dataset, i.e., you want to combine your test results for the sub-datasets.
 
-**However,** `combine_pvalues` assumes that the individual tests are continuous instead of discrete (see below).
+**However,** `combine_pvalues` assumes that the individual tests are continuous instead of discrete (see below what these are).
 If you apply `combine_pvalues` to *p* values from a discrete test, it will systematically overestimate the combined *p* value, i.e., you may falsely accept the null hypothesis (false negative).
 This module addresses this and thus you should consider it if:
 
@@ -24,8 +24,8 @@ Note that this module is restricted to `Fisher’s method`_ for combining *p* va
 While `combine_pvalues` also provides alternatives methods, those also assume continuous tests and thus suffer from a similar problem, as there is no way to address this without knowing more about the employed tests.
 However, some of the alternative methods may underestimate the *p* value, whereas Fisher’s method consistently overestimates.
 
-Discrete vs. continuous test
-````````````````````````````
+Discrete and continuous tests
+`````````````````````````````
 
 If the null hypothesis of a given test holds, its *p* values are uniformly distributed on the interval :math:`(0,1]` in the sense that :math:`\text{CDF}(p) = p`.
 However, for some tests, there is a limited number of possible outcomes for a given sample size.
