@@ -51,6 +51,3 @@ def test_tree_prod_mult_count(n_factors):
 	product = tree_prod(factors)
 	assert n_factors <= 2**product.mults < 2*n_factors
 
-
-
-
