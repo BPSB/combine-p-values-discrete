@@ -1,4 +1,4 @@
-from .tools import tree_prod
+from .tools import tree_prod, sign_test
 from .logpdist import LogPDist
 from .ctr import CombinedTestResult
 
