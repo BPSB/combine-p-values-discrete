@@ -62,7 +62,7 @@ def mwu_logp_sum(pairs):
 
 @mark.parametrize("trend",np.linspace(-0.7,0.7,10))
 def test_compare_with_surrogates(trend):
-	RNG = np.random.default_rng(hash(10+trend))
+	RNG = np.random.default_rng(hash(np.exp(trend)))
 	dataset = create_data(RNG,10,max_size=5,trend=trend)
 	
 	p_from_combine = combine_mwus(dataset,alternative="less",RNG=RNG)
@@ -76,5 +76,10 @@ def test_compare_with_surrogates(trend):
 	]
 	p_from_surrogates = np.average( original_logp_sum >= surrogate_logp_sums )
 	
-	assert_matching_p_values( p_from_surrogates, p_from_combine, min(size,n), factor=3 )
+	assert_matching_p_values(
+			p_from_surrogates,
+			p_from_combine,
+			size = min(size,n),
+			factor=3, compare=True
+		)
 
