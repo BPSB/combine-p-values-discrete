@@ -70,11 +70,13 @@ def std_counted_p(p,n):
 	
 	return np.sqrt(p*(1-p)/n)
 
-def assert_matching_p_values(p,target_p,n,factor=3):
+def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 	p = np.atleast_1d(p)
 	diffs = np.abs( p - target_p )
+	
+	reference_p = (p+target_p)/2 if compare else target_p
 	with np.errstate(invalid='ignore'):
-		ratios = diffs/std_counted_p(target_p,n)
+		ratios = diffs/std_counted_p(reference_p,n)
 	if np.any(ratios>factor):
 		i = np.argmax(ratios-factor)
 		
