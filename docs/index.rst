@@ -1,7 +1,7 @@
 Combine discrete *p* values (in Python)
 =======================================
 
-This module provides a toolbox for applying `Fisher’s method`_ to combine *p* values of rank tests and other tests with a discrete null distribution.
+This module provides a toolbox for combining *p* values of rank tests and other tests with a discrete null distribution.
 
 When do you need this?
 ----------------------
@@ -14,15 +14,12 @@ This module has a scope similar to SciPy’s `combine_pvalues`_:
 * You want a single *p* value for the null hypothesis taking into account the entire dataset, i.e., you want to combine your test results for the sub-datasets.
 
 **However,** `combine_pvalues` assumes that the individual tests are continuous instead of discrete (see below what these are).
-If you apply `combine_pvalues` to *p* values from a discrete test, it will systematically overestimate the combined *p* value, i.e., you may falsely accept the null hypothesis (false negative).
+If you apply `combine_pvalues` to *p* values from a discrete test, it will systematically misestimate the combined *p* value.
+For example, for `Fisher’s method`_ it systematically overestimates the *p* value, i.e., you may falsely accept the null hypothesis (false negative).
 This module addresses this and thus you should consider it if:
 
 * At least one of the sub-tests is *discrete* with a low number of possible *p* values. What is a “low number” depends on the details, but 30 almost always is.
-* The combined *p* value returned by `combine_pvalues` (with Fisher’s method) is not very low already.
-
-Note that this module is restricted to `Fisher’s method`_ for combining *p* values.
-While `combine_pvalues` also provides alternatives methods, those also assume continuous tests and thus suffer from a similar problem, as there is no way to address this without knowing more about the employed tests.
-However, some of the alternative methods may underestimate the *p* value, whereas Fisher’s method consistently overestimates.
+* The combined *p* value returned by `combine_pvalues` is not very low already.
 
 Discrete and continuous tests
 `````````````````````````````
@@ -63,24 +60,16 @@ The most relevant **continuous tests** are:
 How this module works
 ---------------------
 
-This modules uses the discrete analog of `Fisher’s method`_.
-Like Fisher’s method, it uses the sum of logarithms of individual *p* values as a test statistics:
+To correctly compute the combined *p* value, we need to take into account the null distributions of the individual tests, i.e., what *p* values are possible.
+This module determines these values for popular tests or lets you specify them yourself.
+Of course, if you have continuous tests in the mix, you can also include it.
+Either way, the relevant information is stored in a `CTR` object (“combined test result”).
+Tests can be combined simply by applying Python multiplication (the `*` operator) to the respective objects.
 
-.. math::
-
-	\sum_{i=1}^n \log(p_i) = \log\left( \prod_{i=1}^n p_i \right )
-
-For continuous tests, we know that the null distribution for each single :math:`p_i` is identical, namely the standard uniform distribution.
-All we need to do is convolve it with itself :math:`n` times (in logarithmic space) to obtain the null distribution of the compound statistics.
-This is analytically tractable, which is what Fisher did.
-For discrete tests, we have different null distributions for each test, which this module convolves numerically.
-
-This module allows you to obtain and store the null distribution for a single test, using either provided functions for common tests or building such functions yourself.
-The framework then allows you to combine test results with each other, convolving the respective null distributions, and finally obtain the combined *p* value.
-If you have continuous tests in the mix, you can also include them.
-At the core is the class `CTR` ("Combined Test Result”), instances of which stores single tests result with their null distributions or combinations thereof.
-Two instances can be combined with simple Python multiplication (i.e., what the `*` operator does).
-
+The difficulty for determining the combined *p* value is convolving the respective null distributions.
+While this is analytically possible for continuous tests or a small number of discrete tests, it is requires numerical approximations otherwise.
+To perform these approximations, we use a Monte Carlo simulation sampling combinations of individual *p* values.
+Thanks to modern computing and NumPy, it is easy to make the number of samples very high and the result very accurate.
 
 A simple example
 ----------------
@@ -88,11 +77,23 @@ A simple example
 .. automodule:: simple_example
 ..
 
+What needs to be done
+---------------------
+
+This module is work in progress:
+
+* The core structures and two tests are finished.
+* Everything you can use, is thoroughly tested.
+* So far, only `Fisher’s method`_ is supported. An extension to further methods is straightforward.
+* So far, only the sign test and Mann–Whitney *U* test are supported.
+* An extensive example illustrating why you need this method and that it works is planned.
+* An instruction for implementing your own tests is planned.
+
 Command reference
 -----------------
 
 .. automodule:: combine_pvalues_discrete
-	:members: CTR, LogPDist, tree_prod, sign_test
+	:members: CTR, PDist, sign_test
 
 
 
