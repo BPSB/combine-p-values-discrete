@@ -70,5 +70,11 @@ def std_counted_p(p,n):
 	
 	return np.sqrt(p*(1-p)/n)
 
-
+def assert_matching_p_values(p,target_p,n,factor=3):
+	assert np.all(
+			np.abs( p - target_p )
+			<=
+			factor*std_counted_p(target_p,n)
+		)
+	
 
