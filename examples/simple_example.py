@@ -28,7 +28,8 @@ We do so by doing something very similar with `B_1` and `B_2` and the Mann–Whi
 	:lines: 4-4
 
 Finally, we perform the *t* test on `C_1` and `C_2`.
-Since the *t* test is a continuous test, we do not need a special constructor to create a `CTR`, but can use generic one using only the *p* value computed with an existing function, here `scipy.stats.ttest_rel`:
+Since the *t* test is a continuous test, we do not need a special constructor to create a `CTR`, but can use generic one using only the *p* value computed with an existing function, here `scipy.stats.ttest_rel`.
+The argument `[]` specifies that the test is continuous:
 
 .. literalinclude:: ../examples/simple_example.py
 	:start-after: example-st\u0061rt
@@ -67,8 +68,8 @@ if __name__ == "__main__":
 	
 	from scipy.stats import ttest_rel
 	p_C = ttest_rel(C_1,C_2).pvalue
-	result_C = CTR.from_continuous_test(p_C)
+	result_C = CTR.from_test(p_C,[])
 	
 	combined_result = result_A * result_B * result_C
-	print(combined_result.combined_p)
+	print(combined_result.combined_p())
 
