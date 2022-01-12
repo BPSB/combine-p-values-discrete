@@ -2,24 +2,27 @@ from pytest import mark, raises
 from itertools import count
 import numpy as np
 from scipy.stats import mannwhitneyu, uniform, ks_1samp
+from math import prod
 
 from combine_pvalues_discrete.ctr import CTR
-from combine_pvalues_discrete.tools import tree_prod
+from combine_pvalues_discrete.tools import assert_matching_p_values
+
+size = 100000
 
 # All MWU tests occur with the alternative "less".
 
 def test_simplest_case():
 	assert (
-		CTR.from_mann_whitney_u([0],[1],alternative="less",density=1000)
+		CTR.from_mann_whitney_u([0],[1],alternative="less")
 		==
-		CTR.from_discrete_test( 0.5, [0.5,1.0] )
+		CTR.from_test( 0.5, [0.5,1.0] )
 	)
 
-def combine_mwus( pairs, **kwargs ):
-	return tree_prod(
+def combine_mwus( pairs, RNG, **kwargs ):
+	return prod(
 			CTR.from_mann_whitney_u(X,Y,**kwargs)
 			for X,Y in pairs
-		).combined_p
+		).combined_p(RNG=RNG,size=size)
 
 def create_data(RNG,n,max_size=10,trend=0):
 	"""
@@ -32,10 +35,10 @@ def create_data(RNG,n,max_size=10,trend=0):
 		) for _ in range(n) ]
 
 def test_null_distribution():
-	RNG = np.random.default_rng(42)
+	RNG = np.random.default_rng(23)
 	
 	p_values = [
-		combine_mwus(create_data(RNG,10),alternative="less")
+		combine_mwus( create_data(RNG,10), alternative="less", RNG=RNG )
 		for _ in range(300)
 	]
 	
@@ -57,12 +60,12 @@ def mwu_logp_sum(pairs):
 		for X,Y in pairs
 	)
 
-@mark.parametrize("trend,seed",zip(np.linspace(-0.7,0.7,10),count()))
-def test_compare_with_surrogates(trend,seed):
-	RNG = np.random.default_rng(seed)
+@mark.parametrize("trend",np.linspace(-0.7,0.7,10))
+def test_compare_with_surrogates(trend):
+	RNG = np.random.default_rng(hash(10+trend))
 	dataset = create_data(RNG,10,max_size=5,trend=trend)
 	
-	p_from_combine = combine_mwus(dataset,alternative="less")
+	p_from_combine = combine_mwus(dataset,alternative="less",RNG=RNG)
 	
 	n = 1000
 	
@@ -71,8 +74,7 @@ def test_compare_with_surrogates(trend,seed):
 		mwu_logp_sum( create_surrogate(RNG,dataset) )
 		for _ in range(n)
 	]
-	p_from_surrogates = np.average( original_logp_sum > surrogate_logp_sums )
+	p_from_surrogates = np.average( original_logp_sum >= surrogate_logp_sums )
 	
-	np.testing.assert_allclose( p_from_surrogates, p_from_combine, atol=1/np.sqrt(n) )
-
+	assert_matching_p_values( p_from_surrogates, p_from_combine, min(size,n), factor=3 )
 
