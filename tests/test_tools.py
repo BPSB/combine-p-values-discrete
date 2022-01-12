@@ -3,7 +3,7 @@ import math
 import numpy as np
 from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 
-from combine_pvalues_discrete.tools import is_unity, searchsorted_closest, tree_prod, sign_test, std_counted_p
+from combine_pvalues_discrete.tools import is_unity, searchsorted_closest, sign_test, std_counted_p
 
 
 @mark.parametrize(
@@ -34,24 +34,6 @@ def test_searchsorted_closest():
 
 def test_searchsorted_closest_single_input():
 	assert searchsorted_closest([1,2,3],2.1) == 1
-
-@mark.parametrize("n_factors",range(1,20))
-def test_tree_prod(n_factors):
-	factors = np.random.uniform( size=n_factors )
-	assert np.isclose( tree_prod(factors), math.prod(factors) )
-
-class MultCounter(object):
-	def __init__(self,mults=0):
-		self.mults = mults
-	
-	def __mul__(self,other):
-		return MultCounter(max(self.mults,other.mults)+1)
-
-@mark.parametrize("n_factors",range(1,20))
-def test_tree_prod_mult_count(n_factors):
-	factors = [ MultCounter() for _ in range(n_factors) ]
-	product = tree_prod(factors)
-	assert n_factors <= 2**product.mults < 2*n_factors
 
 @mark.parametrize("n",range(1,20))
 def test_signtest_with_statsmodels(n):

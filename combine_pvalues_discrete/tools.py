@@ -24,25 +24,6 @@ def searchsorted_closest(array,values):
 	left_or_right = values-array[left_idcs] < array[right_idcs]-values
 	return np.choose( left_or_right, (right_idcs,left_idcs) )
 
-def tree_prod(factors):
-	"""
-	Returns the product of `factors` with sub-results being combined in a tree-like manner as opposed to a sequential one: First products of pairs are computed, then pairs of pairs, and so on. This may reduce the computing time and increase the accuracy when multiplying `CTRs`s. Returns `1` if `factors` is empty.
-	
-	Parameters
-	----------
-	factors
-		iterable of objects to be multiplied
-	"""
-	
-	factors = list(factors)
-	number = len(factors)
-	if number == 1:
-		return factors[0]
-	elif number == 0:
-		return 1
-	else:
-		return tree_prod(factors[:number//2]) * tree_prod(factors[number//2:])
-
 def sign_test(x,y=0,alternative="less"):
 	"""
 	Sign test.
