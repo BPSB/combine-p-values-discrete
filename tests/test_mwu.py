@@ -79,7 +79,7 @@ def test_compare_with_surrogates(trend):
 	assert_matching_p_values(
 			p_from_surrogates,
 			p_from_combine,
-			size = min(size,n),
+			n = min(size,n),
 			factor=3, compare=True
 		)
 
