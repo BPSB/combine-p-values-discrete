@@ -1,10 +1,10 @@
 from pytest import mark, raises
 import numpy as np
-from numpy.testing import assert_allclose
 from scipy.stats import uniform, ks_1samp
 from itertools import combinations
 
 from combine_pvalues_discrete.pdist import PDist
+from combine_pvalues_discrete.tools import assert_matching_p_values
 
 def test_core_stuff():
 	dists = ( PDist([]), PDist([1]), PDist([0.5,1]) )
@@ -48,13 +48,13 @@ def test_cumprobs(size):
 @mark.parametrize("size",2**np.arange(0,10))
 @mark.parametrize("n",10**np.arange(4,7))
 def test_sampling(size,n):
-	RNG = np.random.default_rng(size*n)
+	RNG = np.random.default_rng(42*size*n)
 	if size:
 		dist = PDist( list(RNG.random(size-1)) + [1] )
 		sample = dist.sample(RNG=RNG,size=n)
-		for p,prob in dist:
-			assert_allclose( np.average(sample==p), prob, atol=3/np.sqrt(n) )
-			assert_allclose( np.average(sample<=p),   p , atol=3/np.sqrt(n) )
+		for p,prob in zip(dist,dist.probs):
+			assert np.isclose( np.average(sample==p), prob, atol=3/np.sqrt(n) )
+			assert_matching_p_values( np.average(sample<=p), p, n )
 	else:
 		dist = PDist([])
 		sample = dist.sample(RNG=RNG,size=n)

@@ -19,27 +19,30 @@ class PDist(object):
 			if not ( ( 0 < self.ps[0] ) and ( 1-1e-10 < self.ps[-1] <= 1 ) ):
 				raise ValueError(f"p values must be between 0 and 1, with the largest being 1; but they are {ps}")
 			self.ps[-1] = 1
-		self.probs = np.diff(self.ps,prepend=0)
+	
+	@property
+	def probs(self):
+		return np.diff(self.ps,prepend=0)
 	
 	@property
 	def continuous(self):
 		return self.ps.size == 0
 	
 	def __iter__(self):
-		yield from zip(self.ps,self.probs)
+		yield from self.ps
 	
 	def __repr__(self):
 		if self.continuous:
 			return f"PDist( uniform )"
 		else:
-			points = ", ".join(f"{p:.3g}: {pro:.3g}" for p,prob in self)
+			points = ", ".join(f"{p:.3g}" for p in self)
 			return f"PDist( {points} )"
 	
 	def __eq__(self,other):
 		if self.continuous:
 			return other.continuous
 		else:
-			return all( (p1==p2 and prob1==prob2) for (p1,prob1),(p2,prob2) in zip(self,other) )
+			return all( p1==p2 for p1,p2 in zip(self,other) )
 	
 	def sample(self,RNG=None,size=10000000):
 		RNG = RNG or np.random.default_rng()

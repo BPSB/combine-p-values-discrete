@@ -1,73 +1,78 @@
 from pytest import mark, raises
 from itertools import chain, product, combinations_with_replacement
 import numpy as np
+from math import prod
 
 from scipy.stats import combine_pvalues
 
-from combine_pvalues_discrete.logpdist import LogPDist
 from combine_pvalues_discrete.ctr import CTR
-from combine_pvalues_discrete.tools import tree_prod, sign_test
+from combine_pvalues_discrete.pdist import PDist
+from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values
+
+size = 100000
 
 examples = [
-	CTR( 0.5, LogPDist.uniform_from_ps([0.5,    1]) ),
-	CTR( 1.0, LogPDist.uniform_from_ps([0.5,    1]) ),
-	CTR( 0.3, LogPDist.uniform_from_ps([0.3,0.5,1]) ),
-	CTR( 0.7, LogPDist.uniform_from_ps([0.2,0.7,1]) ),
+	CTR.from_test( 0.5, [0.5,      1] ),
+	CTR.from_test( 1.0, [0.5,      1] ),
+	CTR.from_test( 0.3, [0.3, 0.5, 1] ),
+	CTR.from_test( 0.7, [0.2, 0.7, 1] ),
 ]
 
 @mark.parametrize(
-		"combo",
-		chain(*( combinations_with_replacement(examples,r) for r in range(1,3) ))
+		"seed, combo",
+		enumerate(chain(*(
+			combinations_with_replacement(examples,r)
+			for r in range(1,3)
+		)))
 	)
-def test_commutativity_and_associativity(combo):
+def test_commutativity_and_associativity(seed,combo):
+	RNG = np.random.default_rng(seed)
 	combo = list(combo)
-	x = tree_prod(combo)
+	x = prod(combo)
 	np.random.shuffle(combo)
-	y = tree_prod(combo)
+	y = prod(combo)
 	assert x == y
-	assert x.combined_p == y.combined_p
-
-@mark.parametrize("example",examples)
-def test_from_discrete_test(example):
-	ps = 10**(example.nulldist.logps[example.nulldist.probs>0])
-	assert example == CTR.from_discrete_test(10**example.logp,ps)
+	assert_matching_p_values(
+			x.combined_p(size=size,RNG=RNG),
+			y.combined_p(size=size,RNG=RNG),
+			size, factor=3
+		)
 
 
 # Reproducing a sign test by combining single comparisons:
 
-def my_sign_test_onesided(X,Y):
-	return tree_prod(
-		CTR.from_discrete_test( 0.5 if x<y else 1, [0.5,1.0] )
-		for x,y in zip(X,Y)
-	).combined_p
-
-sign_tests = [ lambda X,Y:sign_test(X,Y)[0], my_sign_test_onesided ]
-
 @mark.parametrize( "n,replicate", product( range(2,15), range(20) ) )
 def test_comparison_to_sign_test(n,replicate):
-	n = 13
-	X = np.random.random(n)
-	Y = np.random.random(n)
+	RNG = np.random.default_rng((n+20)**3*replicate)
 	
-	p_values = [ test(X,Y) for test in sign_tests ]
+	def my_sign_test_onesided(X,Y):
+		return prod(
+			CTR.from_test( 0.5 if x<y else 1, [0.5,1.0] )
+			for x,y in zip(X,Y)
+		).combined_p(size=size,RNG=RNG)
 	
-	np.testing.assert_almost_equal( *p_values )
+	X = RNG.random(n)
+	Y = RNG.random(n)
+	
+	assert_matching_p_values(
+		my_sign_test_onesided(X,Y),
+		sign_test(X,Y)[0],
+		size,
+	)
 
 # Reproducing `combine_pvalues` for continuous tests and comparing:
 
-def emulate_continuous_combine_ps(ps):
-    return tree_prod(
-        CTR.from_continuous_test(p,density=10000)
-        for p in ps
-    ).combined_p
+def emulate_continuous_combine_ps(ps,RNG):
+    return prod( CTR.from_test(p,[]) for p in ps ).combined_p(RNG=RNG,size=size)
 
 @mark.parametrize( "n", range(2,15) )
 def test_compare_with_combine_pvalues(n):
+	RNG = np.random.default_rng(n)
 	ps = 10**np.random.uniform(-3,0,n)
 	
-	np.testing.assert_allclose(
+	assert_matching_p_values(
+		emulate_continuous_combine_ps(ps,RNG),
 		combine_pvalues(ps)[1],
-		emulate_continuous_combine_ps(ps),
-		rtol=1e-3, atol=1e-4
+		size,
 	)
 
