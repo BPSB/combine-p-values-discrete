@@ -63,3 +63,12 @@ def sign_test(x,y=0,alternative="less"):
 	non_tied = less+greater
 	return binomtest( greater, non_tied, alternative=alternative ).pvalue, non_tied
 
+def std_counted_p(p,n):
+	"""
+	Estimates the standard deviation of a p value obtained by sampling a statistics n times.
+	"""
+	
+	return np.sqrt(p*(1-p)/n)
+
+
+

@@ -3,7 +3,7 @@ import math
 import numpy as np
 from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 
-from combine_pvalues_discrete.tools import is_unity, searchsorted_closest, tree_prod, sign_test
+from combine_pvalues_discrete.tools import is_unity, searchsorted_closest, tree_prod, sign_test, std_counted_p
 
 
 @mark.parametrize(
@@ -38,7 +38,7 @@ def test_searchsorted_closest_single_input():
 @mark.parametrize("n_factors",range(1,20))
 def test_tree_prod(n_factors):
 	factors = np.random.uniform( size=n_factors )
-	np.testing.assert_almost_equal( tree_prod(factors), math.prod(factors) )
+	assert np.isclose( tree_prod(factors), math.prod(factors) )
 
 class MultCounter(object):
 	def __init__(self,mults=0):
@@ -63,7 +63,7 @@ def test_signtest_with_statsmodels(n):
 	Y = np.random.normal(n)
 	p_2s = sign_test(X+Y,Y,alternative="two-sided")[0]
 	
-	np.testing.assert_almost_equal(p,p_sm)
+	assert np.isclose(p,p_sm)
 	assert p == p_2s
 
 @mark.parametrize("n",range(1,20))
@@ -82,11 +82,26 @@ def test_signtest_with_statsmodels_onesided(n):
 	Y = np.random.normal(n)
 	p_2s = sign_test(X+Y,Y,alternative="less")[0]
 
-	np.testing.assert_almost_equal(p,p_sm)
+	assert np.isclose(p,p_sm)
 	assert p == p_2s
 
 def test_signtest_order():
 	n = 20
 	X = np.zeros(n)
 	Y = np.ones(n)
-	np.testing.assert_almost_equal( sign_test(X,Y,alternative="less")[0], 2**-n )
+	assert np.isclose( sign_test(X,Y,alternative="less")[0], 2**-n )
+
+def test_std_counted_p():
+	n = 1000
+	m = 10000
+	k = 30
+	nulls = np.random.uniform(0,1,size=(n,m))
+	true_ps = np.logspace(-2,0,k)
+	std_ps = std_counted_p(true_ps,n)
+	
+	estimated_ps = np.mean(nulls[:,:,None]<true_ps[None,None,:],axis=0)
+	assert estimated_ps.shape == (m,k)
+	control = np.std(estimated_ps,axis=0)
+	assert np.all( np.abs(np.mean(estimated_ps,axis=0)-true_ps) <= 3*std_ps/np.sqrt(m) )
+	np.testing.assert_allclose( std_ps, control, rtol=3/np.sqrt(m) )
+
