@@ -47,11 +47,37 @@ class PDist(object):
 		else:
 			return all( p1==p2 for p1,p2 in zip(self,other) )
 	
-	def sample(self,RNG=None,size=10000000):
+	def sample(self,RNG=None,size=10000000,method="proportional"):
+		"""
+		Returns `size` samples from the distribution using `RNG` as the random-number generator.
+		
+		If `method` is `"proportional"`, the frequency of each value will be exactly proportional to its probability – except for rounding. Only the rounding and the order of elements will be stochastic.
+		
+		If `method` is `"stochastic"`, the values will be randomly sampled and thus their actual frequencies are subject to stochastic fluctuations. This usually leads to slightly less accurate results.
+		"""
 		RNG = RNG or np.random.default_rng()
 		
-		if self.continuous:
-			return 1-RNG.uniform(size=size)
+		if method=="stochastic":
+			if self.continuous:
+				return 1-RNG.uniform(size=size)
+			else:
+				return RNG.choice( self.ps, p=self.probs, size=size, replace=True )
+		elif method=="proportional":
+			if self.continuous:
+				pad = 1/(2*size)
+				result = np.linspace( pad, 1-pad, size )
+			else:
+				result = np.empty(size)
+				start = 0
+				combos = list(zip(self.ps,self.probs))
+				RNG.shuffle(combos)
+				for p,prob in combos:
+					end = start + prob*size
+					result[ round(start) : round(end) ] = p
+					start = end
+				assert round(end) == size
+			RNG.shuffle(result)
+			return result
 		else:
-			return RNG.choice( self.ps, p=self.probs, size=size, replace=True )
+			raise ValueError('Method must either be "proportional" or "stochastic"')
 
