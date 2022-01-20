@@ -3,7 +3,12 @@ import math
 import numpy as np
 from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 
-from combine_pvalues_discrete.tools import is_unity, searchsorted_closest, sign_test, std_counted_p
+from combine_pvalues_discrete.tools import (
+		is_unity,
+		searchsorted_closest,
+		sign_test,
+		counted_p, std_counted_p, assert_matching_p_values,
+	)
 
 
 @mark.parametrize(
@@ -73,17 +78,39 @@ def test_signtest_order():
 	Y = np.ones(n)
 	assert np.isclose( sign_test(X,Y,alternative="less")[0], 2**-n )
 
+def test_counted_p():
+	null_stats = [1,2,3,4,5,6,7,8,9]
+	assert counted_p(0.5,null_stats) == 0.1
+	assert counted_p(3.5,null_stats) == 0.4
+	assert counted_p(10 ,null_stats) == 1.0
+
 def test_std_counted_p():
-	n = 1000
-	m = 10000
-	k = 30
-	nulls = np.random.uniform(0,1,size=(n,m))
-	true_ps = np.logspace(-2,0,k)
-	std_ps = std_counted_p(true_ps,n)
+	RNG = np.random.default_rng(42)
 	
-	estimated_ps = np.mean(nulls[:,:,None]<true_ps[None,None,:],axis=0)
+	n = 1000  # number of points per dataset
+	m = 10000 # number of datasets
+	k = 30    # number of different p values tested
+	nulls = RNG.uniform(0,1,size=(n,m))
+	true_ps = np.logspace(-2,0,k)
+	estimated_ps = counted_p( true_ps[None,None,:], nulls[:,:,None] )
 	assert estimated_ps.shape == (m,k)
+	
+	std_ps = std_counted_p(true_ps,n)
+	assert std_ps.shape == (k,)
 	control = np.std(estimated_ps,axis=0)
-	assert np.all( np.abs(np.mean(estimated_ps,axis=0)-true_ps) <= 3*std_ps/np.sqrt(m) )
+	
+	deviations = true_ps - np.mean(estimated_ps,axis=0)
+	# Corrections because the p value is estimated conservatively and, e.g., can never be below 1/(n+1):
+	size_offset = (1-true_ps)/(n+1)
+	assert np.all( np.abs(deviations+size_offset) <= 3*std_ps/np.sqrt(m) )
+	
+	assert_matching_p_values(
+			np.mean(estimated_ps,axis=0),
+			true_ps,
+			n=n,
+			factor = 3/np.sqrt(m)
+		)
 	np.testing.assert_allclose( std_ps, control, rtol=3/np.sqrt(m) )
+	
+
 

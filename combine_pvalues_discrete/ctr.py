@@ -2,7 +2,7 @@ import math
 import numpy as np
 from warnings import warn
 
-from .tools import is_unity, sign_test
+from .tools import is_unity, sign_test, counted_p
 from .pdist import PDist
 
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
@@ -70,7 +70,7 @@ class CTR(object):
 				nulldist.sample(RNG,size)
 				for nulldist in self.nulldists
 			]
-		return np.mean( statistic(self.p_values) >= statistic(null_samples) )
+		return counted_p( statistic(self.p_values), statistic(null_samples) )
 	
 	@classmethod
 	def from_test(cls,p,all_ps):
