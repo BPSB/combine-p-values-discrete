@@ -22,7 +22,7 @@ def combine_mwus( pairs, RNG, **kwargs ):
 	return prod(
 			CTR.from_mann_whitney_u(X,Y,**kwargs)
 			for X,Y in pairs
-		).combined_p(RNG=RNG,size=size)
+		).get_result(RNG=RNG,size=size).pvalue
 
 def create_data(RNG,n,max_size=10,trend=0):
 	"""

@@ -50,9 +50,9 @@ class CTR(object):
 		B = other.sorted()
 		return A.p_values==B.p_values and A.nulldists==B.nulldists
 	
-	def combined_p(self,RNG=None,size=10000000):
+	def get_result(self,RNG=None,size=10000000):
 		"""
-		Return the p value of the combined tests. Usually, this result is why you are doing all this.
+		Estimate the combined p value. Usually, this result is why you are doing all this.
 		So far only Fisher’s method is supported.
 		
 		Parameters
@@ -63,6 +63,14 @@ class CTR(object):
 		
 		size
 			Number of samples used for Monte Carlo simulation.
+		
+		Returns
+		-------
+		pvalue
+			The estimated combined p value.
+		
+		std
+			The estimated standard deviation of p values when repeating the sampling.
 		"""
 		
 		statistic = lambda x: np.sum(np.log(x),axis=0)

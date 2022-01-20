@@ -1,3 +1,4 @@
+from collections import namedtuple
 import numpy as np
 from scipy.stats import binomtest
 
@@ -44,18 +45,28 @@ def sign_test(x,y=0,alternative="less"):
 	non_tied = less+greater
 	return binomtest( greater, non_tied, alternative=alternative ).pvalue, non_tied
 
-def counted_p(orig_stat,null_stats):
-	null_stats = np.asarray(null_stats)
-	total = null_stats.shape[0]+1
-	count = np.sum( orig_stat>=null_stats, axis=0 )
-	return (count+1)/total
+Combined_P_Value = namedtuple("Combined_P_Value",("pvalue","std"))
 
-def std_counted_p(p,n):
+def counted_p(orig_stat,null_stats):
 	"""
-	Estimates the standard deviation of a p value obtained by sampling a statistics n times.
+	Estimates the p value of a statistic (`orig_stat`) by comparing with the statistic for samples of a null model (`null_stats`). Returns the p value and its (estimated) standard deviation when sampling with this method.
 	"""
-	
-	return np.sqrt(p*(1-p)/n)
+	null_stats = np.asarray(null_stats)
+	size = null_stats.shape[0]
+	count = np.sum( orig_stat>=null_stats, axis=0 )
+	p = (count+1)/(size+1)
+	std = np.sqrt(count*(1-count/size))/(size+1)
+	if std.shape:
+		std[std==0] = 1/(size+1)
+	elif std==0:
+		std = 1/(size+1)
+	return Combined_P_Value(p,std)
+
+def std_from_true_p(true_p,size):
+	"""
+	Standard deviation of p value from samples, if the true p value is known.
+	"""
+	return np.sqrt(true_p*(1-true_p)*size)/(size+1)
 
 def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 	"""
@@ -74,8 +85,7 @@ def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 	
 	reference_p = (p+target_p)/2 if compare else target_p
 	with np.errstate(invalid='ignore'):
-		ratios = diffs/std_counted_p(reference_p,n)
-	
+		ratios = diffs/std_from_true_p(reference_p,n)
 	if np.any(ratios>factor):
 		i = np.nanargmax(ratios-factor)
 		

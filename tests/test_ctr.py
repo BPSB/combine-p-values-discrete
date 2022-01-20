@@ -33,8 +33,8 @@ def test_commutativity_and_associativity(seed,combo):
 	y = prod(combo)
 	assert x == y
 	assert_matching_p_values(
-			x.combined_p(size=size,RNG=RNG),
-			y.combined_p(size=size,RNG=RNG),
+			x.get_result(size=size,RNG=RNG).pvalue,
+			y.get_result(size=size,RNG=RNG).pvalue,
 			size, factor=3
 		)
 
@@ -49,7 +49,7 @@ def test_comparison_to_sign_test(n,replicate):
 		return prod(
 			CTR.from_test( 0.5 if x<y else 1, [0.5,1.0] )
 			for x,y in zip(X,Y)
-		).combined_p(size=size,RNG=RNG)
+		).get_result(size=size,RNG=RNG).pvalue
 	
 	X = RNG.random(n)
 	Y = RNG.random(n)
@@ -63,7 +63,8 @@ def test_comparison_to_sign_test(n,replicate):
 # Reproducing `combine_pvalues` for continuous tests and comparing:
 
 def emulate_continuous_combine_ps(ps,RNG):
-    return prod( CTR.from_test(p,[]) for p in ps ).combined_p(RNG=RNG,size=size)
+	ctr = prod( CTR.from_test(p,[]) for p in ps )
+	return ctr.get_result(RNG=RNG,size=size).pvalue
 
 @mark.parametrize( "n", range(2,15) )
 def test_compare_with_combine_pvalues(n):
