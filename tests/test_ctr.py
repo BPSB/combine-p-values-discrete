@@ -29,7 +29,7 @@ def test_commutativity_and_associativity(seed,combo):
 	RNG = np.random.default_rng(seed)
 	combo = list(combo)
 	x = prod(combo)
-	np.random.shuffle(combo)
+	RNG.shuffle(combo)
 	y = prod(combo)
 	assert x == y
 	assert_matching_p_values(
@@ -68,7 +68,7 @@ def emulate_continuous_combine_ps(ps,RNG):
 @mark.parametrize( "n", range(2,15) )
 def test_compare_with_combine_pvalues(n):
 	RNG = np.random.default_rng(n)
-	ps = 10**np.random.uniform(-3,0,n)
+	ps = 10**RNG.uniform(-3,0,n)
 	
 	assert_matching_p_values(
 		emulate_continuous_combine_ps(ps,RNG),
