@@ -13,8 +13,7 @@ This module has a scope similar to SciPy’s `combine_pvalues`_:
 * There is no straightforward test to apply to the entire dataset.
 * You want a single *p* value for the null hypothesis taking into account the entire dataset, i.e., you want to combine your test results for the sub-datasets.
 
-**However,** `combine_pvalues` assumes that the individual tests are continuous instead of discrete (see below what these are).
-If you apply `combine_pvalues` to *p* values from a discrete test, it will systematically misestimate the combined *p* value.
+**However,** `combine_pvalues` assumes that the individual tests are continuous (see below what this means), while appyling it to discrete tests will yield a systematically wrong combined *p* value.
 For example, for `Fisher’s method`_ it systematically overestimates the *p* value, i.e., you may falsely accept the null hypothesis (false negative).
 This module addresses this and thus you should consider it if:
 
@@ -62,7 +61,7 @@ How this module works
 
 To correctly compute the combined *p* value, we need to take into account the null distributions of the individual tests, i.e., what *p* values are possible.
 This module determines these values for popular tests or lets you specify them yourself.
-Of course, if you have continuous tests in the mix, you can also include it.
+Of course, if you have continuous tests in the mix, you can also include them.
 Either way, the relevant information is stored in a `CTR` object (“combined test result”).
 Tests can be combined simply by applying Python multiplication (the `*` operator) to the respective objects.
 
@@ -83,11 +82,11 @@ What needs to be done
 This module is work in progress:
 
 * The core structures and two tests are finished.
-* Everything you can use, is thoroughly tested.
-* So far, only `Fisher’s method`_ is supported. An extension to further methods is straightforward.
+* Everything you *can* use is thoroughly tested.
 * So far, only the sign test and Mann–Whitney *U* test are supported.
 * An extensive example illustrating why you need this method and that it works is planned.
 * An instruction for implementing your own tests is planned.
+* Weighing individual tests is not supported yet.
 
 Command reference
 -----------------

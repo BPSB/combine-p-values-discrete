@@ -5,6 +5,8 @@ from warnings import warn
 from .tools import is_unity, sign_test, counted_p
 from .pdist import PDist
 
+from scipy.special import erfinv
+from scipy.stats import rankdata
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
 
 class CTR(object):
@@ -50,13 +52,27 @@ class CTR(object):
 		B = other.sorted()
 		return A.p_values==B.p_values and A.nulldists==B.nulldists
 	
-	def get_result(self,RNG=None,size=10000000):
+	combining_statistics = {
+		"fisher"          : lambda x:  np.sum( np.log(x)       , axis=0 ),
+		"pearson"         : lambda x: -np.sum( np.log(1-x)     , axis=0 ),
+		"mudholkar_george": lambda x:  np.sum( np.log(x/(1-x)) , axis=0 ),
+		"stouffer"        : lambda x:  np.sum( erfinv(2*x-1)   , axis=0 ),
+		"tippett"         : lambda x:  np.min( x               , axis=0 ),
+		"edgington"       : lambda x:  np.sum( x               , axis=0 ),
+		"simes"           : lambda x:  np.min(x/rankdata(x,axis=0,method="ordinal"),axis=0),
+	}
+	
+	statistics_with_inf = {"pearson","mudholkar_george","stouffer"}
+	
+	def get_result(self,method="fisher",RNG=None,size=10000000):
 		"""
 		Estimate the combined p value. Usually, this result is why you are doing all this.
-		So far only Fisher’s method is supported.
 		
 		Parameters
 		----------
+		method: string or function
+			One of "fisher", "pearson", "mudholkar_george", "stouffer", "tippett", "edgington", "simes", or a self-defined function that takes a two-dimensional array and computes the test statistics alongth the zero-th axis.
+		
 		RNG
 			NumPy random-number generator used for the Monte Carlo simulation.
 			Will be automatically generated if not specified.
@@ -73,12 +89,21 @@ class CTR(object):
 			The estimated standard deviation of p values when repeating the sampling.
 		"""
 		
-		statistic = lambda x: np.sum(np.log(x),axis=0)
-		null_samples = [
-				nulldist.sample(RNG,size)
-				for nulldist in self.nulldists
-			]
-		return counted_p( statistic(self.p_values), statistic(null_samples) )
+		try:
+			statistic = self.combining_statistics[method]
+		except KeyError:
+			statistic = method
+		
+		null_samples = np.empty((len(self.nulldists),size))
+		for i,nulldist in enumerate(self.nulldists):
+			null_samples[i] = nulldist.sample(RNG,size)
+		p_values = np.array(self.p_values)
+		
+		kwargs = {"divide":"ignore","invalid":"ignore"} if (method in self.statistics_with_inf) else {}
+		with np.errstate(**kwargs):
+			orig_stat = statistic(p_values)
+			null_stats = statistic(null_samples)
+		return counted_p( orig_stat, null_stats)
 	
 	@classmethod
 	def from_test(cls,p,all_ps):

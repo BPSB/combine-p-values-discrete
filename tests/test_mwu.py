@@ -18,11 +18,11 @@ def test_simplest_case():
 		CTR.from_test( 0.5, [0.5,1.0] )
 	)
 
-def combine_mwus( pairs, RNG, **kwargs ):
+def combine_mwus( pairs, RNG, combination_method="fisher", **kwargs ):
 	return prod(
 			CTR.from_mann_whitney_u(X,Y,**kwargs)
 			for X,Y in pairs
-		).get_result(RNG=RNG,size=size).pvalue
+		).get_result(RNG=RNG,size=size,method=combination_method).pvalue
 
 def create_data(RNG,n,max_size=10,trend=0):
 	"""
@@ -34,15 +34,22 @@ def create_data(RNG,n,max_size=10,trend=0):
 			RNG.normal(size=RNG.integers(2,max_size,endpoint=True))
 		) for _ in range(n) ]
 
-def test_null_distribution():
-	RNG = np.random.default_rng(23)
+@mark.long
+@mark.parametrize("seed,method",enumerate(CTR.combining_statistics))
+def test_null_distribution(seed,method):
+	RNG = np.random.default_rng(seed)
 	
 	p_values = [
-		combine_mwus( create_data(RNG,10), alternative="less", RNG=RNG )
+		combine_mwus(
+			create_data(RNG,10),
+			alternative="less",
+			RNG=RNG,
+			combination_method = method,
+		)
 		for _ in range(300)
 	]
 	
-	assert ks_1samp(p_values,uniform.cdf).pvalue > 0.05
+	assert ks_1samp(p_values,uniform.cdf).pvalue > 0.01
 
 def create_surrogate(RNG,pairs):
 	"""
