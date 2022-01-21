@@ -2,16 +2,6 @@ from collections import namedtuple
 import numpy as np
 from scipy.stats import binomtest
 
-def is_unity(thing):
-	"""
-	Returns whether `thing` is equivalent to one, i.e., can be seen as a the neutral element of multiplication.
-	"""
-	
-	try:
-		return thing==1
-	except:
-		return False
-
 def searchsorted_closest(array,values):
 	"""
 	Wrapper around NumPy’s `searchsorted` that returns the index of the closest value(s) – as opposed to the next lower or higher one.

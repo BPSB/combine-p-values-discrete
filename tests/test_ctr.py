@@ -6,17 +6,16 @@ from math import prod, sqrt
 from scipy.stats import combine_pvalues
 from scipy.special import erf, erfinv
 
-from combine_pvalues_discrete.ctr import CTR
-from combine_pvalues_discrete.pdist import PDist
+from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
 from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values
 
 size = 100000
 
 examples = [
-	CTR.from_test( 0.5, [0.5,      1] ),
-	CTR.from_test( 1.0, [0.5,      1] ),
-	CTR.from_test( 0.3, [0.3, 0.5, 1] ),
-	CTR.from_test( 0.7, [0.2, 0.7, 1] ),
+	CTR( 0.5, [0.5,      1] ),
+	CTR( 1.0, [0.5,      1] ),
+	CTR( 0.3, [0.3, 0.5, 1] ),
+	CTR( 0.7, [0.2, 0.7, 1] ),
 ]
 
 @mark.parametrize(
@@ -26,19 +25,18 @@ examples = [
 			for r in range(1,3)
 		)))
 	)
-@mark.parametrize("method",CTR.combining_statistics)
+@mark.parametrize("method",combining_statistics)
 def test_commutativity_and_associativity(seed,combo,method):
 	RNG = np.random.default_rng(seed)
-	combo = list(combo)
-	x = prod(combo)
-	RNG.shuffle(combo)
-	y = prod(combo)
-	assert x == y
-	assert_matching_p_values(
-			x.get_result(size=size,RNG=RNG,method=method).pvalue,
-			y.get_result(size=size,RNG=RNG,method=method).pvalue,
-			size, factor=3
-		)
+	combo_1 = list(combo)
+	combo_2 = combo_1.copy()
+	RNG.shuffle(combo_2)
+	
+	results = [
+			combine(combo,RNG=RNG,size=size,method=method).pvalue
+			for combo in [combo_1,combo_2]
+		]
+	assert_matching_p_values(*results,size,factor=3)
 
 
 # Reproducing a sign test by combining single comparisons:
@@ -48,11 +46,11 @@ def test_comparison_to_sign_test(n,replicate):
 	RNG = np.random.default_rng((n+20)**3*replicate)
 	
 	def my_sign_test_onesided(X,Y):
-		ctr = prod(
-			CTR.from_test( 0.5 if x<y else 1, [0.5,1.0] )
-			for x,y in zip(X,Y)
-		)
-		return ctr.get_result(size=size,RNG=RNG,method="fisher").pvalue
+		ctrs = [
+				CTR( 0.5 if x<y else 1, [0.5,1.0] )
+				for x,y in zip(X,Y)
+			]
+		return combine(ctrs,size=size,RNG=RNG,method="fisher").pvalue
 	
 	X = RNG.random(n)
 	Y = RNG.random(n)
@@ -66,8 +64,8 @@ def test_comparison_to_sign_test(n,replicate):
 # Reproducing `combine_pvalues` for continuous tests and comparing:
 
 def emulate_continuous_combine_ps(ps,method,RNG=np.random.default_rng()):
-	ctr = prod( CTR.from_test(p,[]) for p in ps )
-	return ctr.get_result(RNG=RNG,size=size,method=method).pvalue
+	ctrs = [ CTR(p) for p in ps ]
+	return combine(ctrs,RNG=RNG,size=size,method=method).pvalue
 
 # Cannot compare with Pearson’s and Tippett’s method due to SciPy Issue #15373
 @mark.parametrize( "method", ["fisher","mudholkar_george","stouffer"] )
@@ -77,14 +75,13 @@ def test_compare_with_combine_pvalues(n,method,magnitude):
 	RNG = np.random.default_rng(n)
 	ps = 10**RNG.uniform( -3 if magnitude=="small" else -1, 0, n )
 	
-	#print( emulate_continuous_combine_ps(ps,RNG,method), combine_pvalues(ps)[1] )
 	assert_matching_p_values(
 		emulate_continuous_combine_ps(ps,RNG=RNG,method=method),
 		combine_pvalues(ps,method=method)[1],
 		size,
 	)
 
-@mark.parametrize( "method", CTR.combining_statistics )
+@mark.parametrize( "method", combining_statistics )
 def test_monotony(method):
 	ps = np.linspace(0.1,0.9,5)
 	combined_ps = [

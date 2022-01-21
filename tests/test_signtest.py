@@ -4,7 +4,7 @@ from itertools import count
 import numpy as np
 from scipy.stats import uniform, ks_1samp
 
-from combine_pvalues_discrete.ctr import CTR
+from combine_pvalues_discrete.ctr import CTR, combine
 from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values
 
 size = 100000
@@ -13,16 +13,14 @@ size = 100000
 
 def test_simplest_case():
 	assert (
-		CTR.from_sign_test([0],[1],alternative="less")
+		CTR.sign_test([0],[1],alternative="less")
 		==
-		CTR.from_test( 0.5, [0.5,1.0] )
+		CTR( 0.5, [0.5,1.0] )
 	)
 
 def combine_sign_tests( pairs, RNG, **kwargs ):
-	return prod(
-			CTR.from_sign_test(X,Y,**kwargs)
-			for X,Y in pairs
-		).get_result(RNG=RNG,size=size).pvalue
+	ctrs = [ CTR.sign_test(X,Y,**kwargs) for X,Y in pairs ]
+	return combine(ctrs,RNG=RNG,size=size).pvalue
 
 def create_data(RNG,n,max_size=10,trend=0):
 	"""

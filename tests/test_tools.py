@@ -5,32 +5,11 @@ import numpy as np
 from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 
 from combine_pvalues_discrete.tools import (
-		is_unity,
 		searchsorted_closest,
 		sign_test,
 		counted_p, std_from_true_p, assert_matching_p_values,
 	)
 
-
-@mark.parametrize(
-		"       thing    , result",
-		[
-			( 1          , True  ),
-			( 1.0        , True  ),
-			( np.array(1), True  ),
-			( True       , True  ),
-			( 3          , False ),
-			( 1.1        , False ),
-			( np.array(4), False ),
-			( False      , False ),
-			( [1]        , False ),
-			( "1"        , False ),
-			( None       , False ),
-			( is_unity   , False ),
-		]
-	)
-def test_is_unity(thing,result):
-	assert is_unity(thing)==result
 
 def test_searchsorted_closest():
 	np.testing.assert_array_equal(

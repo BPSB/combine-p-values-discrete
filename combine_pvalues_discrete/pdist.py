@@ -13,7 +13,7 @@ class PDist(object):
 		If empty, this represents the continous uniform distribution.
 	"""
 	def __init__(self,ps):
-		self.ps = np.atleast_1d(ps)
+		self.ps = np.atleast_1d(ps or [])
 		self.ps.sort()
 		if not self.continuous:
 			if not ( ( 0 < self.ps[0] ) and ( abs(self.ps[-1]-1) < 1e-10 ) ):

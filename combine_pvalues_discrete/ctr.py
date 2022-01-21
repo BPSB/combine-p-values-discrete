@@ -2,7 +2,7 @@ import math
 import numpy as np
 from warnings import warn
 
-from .tools import is_unity, sign_test, counted_p
+from .tools import sign_test, counted_p
 from .pdist import PDist
 
 from scipy.special import erfinv
@@ -11,115 +11,20 @@ from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
 
 class CTR(object):
 	"""
-	CTR = combined test result
+	CTR = combinable test result
 	
-	Represents a single test result or combination thereof. You usually do not want to use the default constructor but one of the class methods for a specific or generic test.
-	
-	Multiplying instances of this class (using the `*` operator or similar) combines the respective results.
+	Represents a single test result. Use the default constructor to implement a test yourself or use one of the class methods for the respective result.
 	
 	Parameters
 	----------
-	p_values
-		Iterable of p_values of the individual tests.
+	p
+		The p value yielded by the test for the investigated sub-dataset.
 	
-	nulldists
-		Iterable of null distributions of the individual tests.
+	all_ps
+		An iterable containing all possible p values of the test for datasets with the same size as the dataset for this individual test.
+		If `None` or empty, all p values will be considered possible, i.e., the test will be assumed to be continuous.
 	"""
-	def __init__(self,p_values,nulldists):
-		if len(p_values) != len(nulldists):
-			raise ValueError("p_values and nulldists must have same length")
-		self.p_values = list(p_values)
-		self.nulldists = list(nulldists)
-	
-	def __mul__(self,other):
-		if is_unity(other): return self
-		return CTR( self.p_values+other.p_values, self.nulldists+other.nulldists )
-	
-	__rmul__ = __mul__
-	
-	def __repr__(self):
-		return f"CombinedTest(\n\t p-values: {self.p_values},\n\t nulldists: {self.nulldists}\n )"
-	
-	def sorted(self):
-		indices = np.argsort(self.p_values)
-		return CTR(
-				np.array(self.p_values )[indices],
-				np.array(self.nulldists)[indices],
-			)
-	
-	def __eq__(self,other):
-		A = self.sorted()
-		B = other.sorted()
-		return A.p_values==B.p_values and A.nulldists==B.nulldists
-	
-	combining_statistics = {
-		"fisher"          : lambda x:  np.sum( np.log(x)       , axis=0 ),
-		"pearson"         : lambda x: -np.sum( np.log(1-x)     , axis=0 ),
-		"mudholkar_george": lambda x:  np.sum( np.log(x/(1-x)) , axis=0 ),
-		"stouffer"        : lambda x:  np.sum( erfinv(2*x-1)   , axis=0 ),
-		"tippett"         : lambda x:  np.min( x               , axis=0 ),
-		"edgington"       : lambda x:  np.sum( x               , axis=0 ),
-		"simes"           : lambda x:  np.min(x/rankdata(x,axis=0,method="ordinal"),axis=0),
-	}
-	
-	statistics_with_inf = {"pearson","mudholkar_george","stouffer"}
-	
-	def get_result(self,method="fisher",RNG=None,size=10000000):
-		"""
-		Estimate the combined p value. Usually, this result is why you are doing all this.
-		
-		Parameters
-		----------
-		method: string or function
-			One of "fisher", "pearson", "mudholkar_george", "stouffer", "tippett", "edgington", "simes", or a self-defined function that takes a two-dimensional array and computes the test statistics alongth the zero-th axis.
-		
-		RNG
-			NumPy random-number generator used for the Monte Carlo simulation.
-			Will be automatically generated if not specified.
-		
-		size
-			Number of samples used for Monte Carlo simulation.
-		
-		Returns
-		-------
-		pvalue
-			The estimated combined p value.
-		
-		std
-			The estimated standard deviation of p values when repeating the sampling.
-		"""
-		
-		try:
-			statistic = self.combining_statistics[method]
-		except KeyError:
-			statistic = method
-		
-		null_samples = np.empty((len(self.nulldists),size))
-		for i,nulldist in enumerate(self.nulldists):
-			null_samples[i] = nulldist.sample(RNG,size)
-		p_values = np.array(self.p_values)
-		
-		kwargs = {"divide":"ignore","invalid":"ignore"} if (method in self.statistics_with_inf) else {}
-		with np.errstate(**kwargs):
-			orig_stat = statistic(p_values)
-			null_stats = statistic(null_samples)
-		return counted_p( orig_stat, null_stats)
-	
-	@classmethod
-	def from_test(cls,p,all_ps):
-		"""
-		Creates an object representing a single result of a test – which can then be combined with others using Python multiplication.
-		
-		Parameters
-		----------
-		p
-			The p value yielded by the test for the investigated sub-dataset.
-		
-		all_ps
-			An iterable containing all possible p values of the test for datasets with the same size as the investigated sub-dataset.
-			If empty, all p values will be considered possible, i.e., the test will be assumed to be continuous.
-		"""
-		
+	def __init__(self,p,all_ps=None):
 		if all_ps and p not in all_ps:
 			next_higher = min( other for other in all_ps if other > p )
 			if next_higher/p > 1+1e-10:
@@ -127,10 +32,11 @@ class CTR(object):
 			else:
 				p = next_higher
 		
-		return cls( [p], [PDist(all_ps)] )
+		self.p = p
+		self.nulldist = PDist(all_ps)
 	
 	@classmethod
-	def from_mann_whitney_u( cls, x, y, **kwargs ):
+	def mann_whitney_u( cls, x, y, **kwargs ):
 		"""
 		Creates an object representing the result of a single Mann–Whitney *U* test (using SciPy’s `mannwhitneyu`).
 		
@@ -154,10 +60,10 @@ class CTR(object):
 		
 		p = mannwhitneyu(x,y,method="exact",**kwargs).pvalue
 		possible_ps = [ _mwu_state.cdf( U,n,m ) for U in range(n*m+1) ]
-		return cls.from_test( p, possible_ps )
+		return cls( p, possible_ps )
 	
 	@classmethod
-	def from_sign_test( cls, x, y=0, alternative="less" ):
+	def sign_test( cls, x, y=0, alternative="less" ):
 		"""
 		Creates an object representing the result of a single sign test.
 		
@@ -176,5 +82,65 @@ class CTR(object):
 		p,m = sign_test(x,y,alternative)
 		
 		all_ps = list( np.cumsum([math.comb(m,i)/2**m for i in range(m)]) ) + [1]
-		return cls.from_test( p, all_ps )
+		return cls( p, all_ps )
+	
+	def __repr__(self):
+		return f"CombinableTest(\n\t p-value: {self.p_value},\n\t nulldist: {self.nulldist}\n )"
+	
+	def __eq__(self,other):
+		return self.p==other.p and self.nulldist==other.nulldist
+
+combining_statistics = {
+	"fisher"          : lambda x:  np.sum( np.log(x)       , axis=0 ),
+	"pearson"         : lambda x: -np.sum( np.log(1-x)     , axis=0 ),
+	"mudholkar_george": lambda x:  np.sum( np.log(x/(1-x)) , axis=0 ),
+	"stouffer"        : lambda x:  np.sum( erfinv(2*x-1)   , axis=0 ),
+	"tippett"         : lambda x:  np.min( x               , axis=0 ),
+	"edgington"       : lambda x:  np.sum( x               , axis=0 ),
+	"simes"           : lambda x:  np.min(x/rankdata(x,axis=0,method="ordinal"),axis=0),
+}
+
+statistics_with_inf = {"pearson","mudholkar_george","stouffer"}
+
+def combine(ctrs,method="fisher",RNG=None,size=10000000):
+	"""
+	Estimates the combined p value of combinable test results. Usually, this result is why you are doing all this.
+	
+	Parameters
+	----------
+	ctrs: iterable of CTRs
+		The test results that shall be combined.
+	
+	method: string or function
+		One of "fisher", "pearson", "mudholkar_george", "stouffer", "tippett", "edgington", "simes", or a self-defined function that takes a two-dimensional array and computes the test statistics alongth the zero-th axis.
+	
+	size
+		Number of samples used for Monte Carlo simulation.
+	
+	RNG
+		NumPy random-number generator used for the Monte Carlo simulation.
+		Will be automatically generated if not specified.
+	
+	Returns
+	-------
+	pvalue
+		The estimated combined p value.
+	
+	std
+		The estimated standard deviation of p values when repeating the sampling.
+	"""
+	
+	try:
+		statistic = combining_statistics[method]
+	except KeyError:
+		statistic = method
+	
+	null_samples = np.vstack([ctr.nulldist.sample(RNG,size) for ctr in ctrs])
+	ps = np.array([ctr.p for ctr in ctrs])
+	
+	kwargs = {"divide":"ignore","invalid":"ignore"} if (method in statistics_with_inf) else {}
+	with np.errstate(**kwargs):
+		orig_stat = statistic(ps)
+		null_stats = statistic(null_samples)
+	return counted_p( orig_stat, null_stats)
 

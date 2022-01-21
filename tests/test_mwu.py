@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import mannwhitneyu, uniform, ks_1samp
 from math import prod
 
-from combine_pvalues_discrete.ctr import CTR
+from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
 from combine_pvalues_discrete.tools import assert_matching_p_values
 
 size = 100000
@@ -13,16 +13,14 @@ size = 100000
 
 def test_simplest_case():
 	assert (
-		CTR.from_mann_whitney_u([0],[1],alternative="less")
+		CTR.mann_whitney_u([0],[1],alternative="less")
 		==
-		CTR.from_test( 0.5, [0.5,1.0] )
+		CTR( 0.5, [0.5,1.0] )
 	)
 
 def combine_mwus( pairs, RNG, combination_method="fisher", **kwargs ):
-	return prod(
-			CTR.from_mann_whitney_u(X,Y,**kwargs)
-			for X,Y in pairs
-		).get_result(RNG=RNG,size=size,method=combination_method).pvalue
+	ctrs = [ CTR.mann_whitney_u(X,Y,**kwargs) for X,Y in pairs ]
+	return combine(ctrs,RNG=RNG,size=size,method=combination_method).pvalue
 
 def create_data(RNG,n,max_size=10,trend=0):
 	"""
@@ -34,8 +32,8 @@ def create_data(RNG,n,max_size=10,trend=0):
 			RNG.normal(size=RNG.integers(2,max_size,endpoint=True))
 		) for _ in range(n) ]
 
-@mark.long
-@mark.parametrize("seed,method",enumerate(CTR.combining_statistics))
+@mark.slow
+@mark.parametrize("seed,method",enumerate(combining_statistics))
 def test_null_distribution(seed,method):
 	RNG = np.random.default_rng(seed)
 	

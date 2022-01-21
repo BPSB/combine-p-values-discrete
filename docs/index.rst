@@ -45,7 +45,7 @@ The most relevant **discrete tests** are:
 * Wilcoxon’s signed rank test,
 * any test based on a ranked correlation such as Kendall’s *τ* and Spearman’s *ρ*,
 * the Kruskal–Wallis test,
-* Fisher’s exact test and any of its alternatives.
+* Fisher’s exact test and any other test for integer contingency tables.
 
 Tests whose result continuously depends on the samples are continuous.
 The most relevant **continuous tests** are:
@@ -62,8 +62,8 @@ How this module works
 To correctly compute the combined *p* value, we need to take into account the null distributions of the individual tests, i.e., what *p* values are possible.
 This module determines these values for popular tests or lets you specify them yourself.
 Of course, if you have continuous tests in the mix, you can also include them.
-Either way, the relevant information is stored in a `CTR` object (“combined test result”).
-Tests can be combined simply by applying Python multiplication (the `*` operator) to the respective objects.
+Either way, the relevant information is stored in a `CTR` object (“combinable test result”).
+These objects can then be combined using the `combine` function.
 
 The difficulty for determining the combined *p* value is convolving the respective null distributions.
 While this is analytically possible for continuous tests or a small number of discrete tests, it is requires numerical approximations otherwise.
