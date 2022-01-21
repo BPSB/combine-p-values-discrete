@@ -6,7 +6,7 @@ from io import open
 setup(
 		name = "combine_pvalues_discrete",
 		description = "A Python toolbox for combining p values from tests with a discrete statistics",
-		long_description = open("README.md", encoding="utf8").read(),
+		long_description = open("README.rst", encoding="utf8").read(),
 		python_requires = ">=3.7",
 		packages = ["combine_pvalues_discrete"],
 		install_requires = ["numpy","scipy>1.7.0"],
