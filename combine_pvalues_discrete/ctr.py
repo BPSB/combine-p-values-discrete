@@ -91,18 +91,23 @@ class CTR(object):
 		return self.p==other.p and self.nulldist==other.nulldist
 
 combining_statistics = {
-	"fisher"          : lambda x:  np.sum( np.log(x)       , axis=0 ),
-	"pearson"         : lambda x: -np.sum( np.log(1-x)     , axis=0 ),
-	"mudholkar_george": lambda x:  np.sum( np.log(x/(1-x)) , axis=0 ),
-	"stouffer"        : lambda x:  np.sum( erfinv(2*x-1)   , axis=0 ),
-	"tippett"         : lambda x:  np.min( x               , axis=0 ),
-	"edgington"       : lambda x:  np.sum( x               , axis=0 ),
-	"simes"           : lambda x:  np.min(x/rankdata(x,axis=0,method="ordinal"),axis=0),
+	("fisher"          ,"normal"  ): lambda x:  np.sum( np.log(x)       , axis=0 ),
+	("pearson"         ,"normal"  ): lambda x: -np.sum( np.log(1-x)     , axis=0 ),
+	("mudholkar_george","normal"  ): lambda x:  np.sum( np.log(x/(1-x)) , axis=0 ),
+	("stouffer"        ,"normal"  ): lambda x:  np.sum( erfinv(2*x-1)   , axis=0 ),
+	("tippett"         ,"normal"  ): lambda x:  np.min( x               , axis=0 ),
+	("edgington"       ,"normal"  ): lambda x:  np.sum( x               , axis=0 ),
+	("simes"           ,"normal"  ): lambda x:  np.min(x/rankdata(x,axis=0,method="ordinal"),axis=0),
+	("fisher"          ,"weighted"): lambda x,w:  w.dot(np.log(x))      ,
+	("pearson"         ,"weighted"): lambda x,w: -w.dot(np.log(1-x))    ,
+	("mudholkar_george","weighted"): lambda x,w:  w.dot(np.log(x/(1-x))),
+	("stouffer"        ,"weighted"): lambda x,w:  w.dot(erfinv(2*x-1))  ,
+	("edgington"       ,"weighted"): lambda x,w:  w.dot(x)              ,
 }
 
 statistics_with_inf = {"pearson","mudholkar_george","stouffer"}
 
-def combine(ctrs,method="fisher",RNG=None,size=10000000):
+def combine(ctrs,method="fisher",weights=None,size=10000000,RNG=None):
 	"""
 	Estimates the combined p value of combinable test results. Usually, this result is why you are doing all this.
 	
@@ -113,6 +118,9 @@ def combine(ctrs,method="fisher",RNG=None,size=10000000):
 	
 	method: string or function
 		One of "fisher", "pearson", "mudholkar_george", "stouffer", "tippett", "edgington", "simes", or a self-defined function that takes a two-dimensional array and computes the test statistics alongth the zero-th axis.
+	
+	weights: iterable of numbers
+		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
 	
 	size
 		Number of samples used for Monte Carlo simulation.
@@ -130,17 +138,32 @@ def combine(ctrs,method="fisher",RNG=None,size=10000000):
 		The estimated standard deviation of p values when repeating the sampling.
 	"""
 	
-	try:
-		statistic = combining_statistics[method]
-	except KeyError:
-		statistic = method
-	
 	null_samples = np.vstack([ctr.nulldist.sample(RNG,size) for ctr in ctrs])
 	ps = np.array([ctr.p for ctr in ctrs])
 	
 	kwargs = {"divide":"ignore","invalid":"ignore"} if (method in statistics_with_inf) else {}
+	
+	if method in (method for method,_ in combining_statistics):
+		if weights is None:
+			statistic = combining_statistics[method,"normal"]
+		else:
+			try:
+				statistic = combining_statistics[method,"weighted"]
+			except KeyError:
+				raise ValueError(f'No weighted version of "{method}" method')
+	else:
+		if not callable(method):
+			raise ValueError(f'Method "{method}" is neither known nor callable.')
+		statistic = method
+	
 	with np.errstate(**kwargs):
-		orig_stat = statistic(ps)
-		null_stats = statistic(null_samples)
+		if weights is None:
+			orig_stat = statistic(ps)
+			null_stats = statistic(null_samples)
+		else:
+			weights = np.asarray(weights)
+			orig_stat = statistic(ps,weights)
+			null_stats = statistic(null_samples,weights)
+	
 	return counted_p( orig_stat, null_stats)
 

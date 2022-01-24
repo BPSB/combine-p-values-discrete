@@ -18,9 +18,9 @@ def test_simplest_case():
 		CTR( 0.5, [0.5,1.0] )
 	)
 
-def combine_mwus( pairs, RNG, combination_method="fisher", **kwargs ):
+def combine_mwus( pairs, RNG, combination_method="fisher", weights=None, **kwargs ):
 	ctrs = [ CTR.mann_whitney_u(X,Y,**kwargs) for X,Y in pairs ]
-	return combine(ctrs,RNG=RNG,size=size,method=combination_method).pvalue
+	return combine(ctrs,combination_method,weights,size,RNG).pvalue
 
 def create_data(RNG,n,max_size=10,trend=0):
 	"""
@@ -33,18 +33,20 @@ def create_data(RNG,n,max_size=10,trend=0):
 		) for _ in range(n) ]
 
 @mark.slow
-@mark.parametrize("seed,method",enumerate(combining_statistics))
-def test_null_distribution(seed,method):
-	RNG = np.random.default_rng(seed)
+@mark.parametrize("method,variant",combining_statistics)
+def test_null_distribution(method,variant):
+	RNG = np.random.default_rng(abs(hash(method+variant)))
+	n = 20
 	
 	p_values = [
 		combine_mwus(
-			create_data(RNG,10),
-			alternative="less",
-			RNG=RNG,
+			create_data(RNG,n),
+			alternative = "less",
+			RNG = RNG,
 			combination_method = method,
+			weights = RNG.random(n) if variant=="weighted" else None
 		)
-		for _ in range(300)
+		for _ in range(30)
 	]
 	
 	assert ks_1samp(p_values,uniform.cdf).pvalue > 0.01
