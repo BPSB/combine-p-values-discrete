@@ -86,7 +86,6 @@ This module is work in progress:
 * So far, only the sign test and Mann–Whitney *U* test are supported.
 * An extensive example illustrating why you need this method and that it works is planned.
 * An instruction for implementing your own tests is planned.
-* Weighing individual tests is not supported yet.
 
 Command reference
 -----------------
