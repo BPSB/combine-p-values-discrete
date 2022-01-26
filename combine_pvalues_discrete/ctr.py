@@ -26,11 +26,12 @@ class CTR(object):
 	"""
 	def __init__(self,p,all_ps=None):
 		if all_ps and p not in all_ps:
-			next_higher = min( other for other in all_ps if other > p )
-			if next_higher/p > 1+1e-10:
-				raise ValueError("p value must be in `all_ps`.")
+			all_ps = np.asarray(all_ps)
+			closest = all_ps[np.argmin(np.abs(all_ps-p))]
+			if (closest-p)/p > 1e-10:
+				raise ValueError(f"p value {p} must be in `all_ps`.")
 			else:
-				p = next_higher
+				p = closest
 		
 		self.p = p
 		self.nulldist = PDist(all_ps)
@@ -85,7 +86,7 @@ class CTR(object):
 		return cls( p, all_ps )
 	
 	def __repr__(self):
-		return f"CombinableTest(\n\t p-value: {self.p_value},\n\t nulldist: {self.nulldist}\n )"
+		return f"CombinableTest(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"
 	
 	def __eq__(self,other):
 		return self.p==other.p and self.nulldist==other.nulldist
