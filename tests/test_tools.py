@@ -1,13 +1,15 @@
 import math
 from collections import namedtuple
-from pytest import mark
+from pytest import mark, raises
 import numpy as np
 from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
+from scipy.stats import ks_1samp, uniform
 
 from combine_pvalues_discrete.tools import (
 		searchsorted_closest,
 		sign_test,
-		counted_p, std_from_true_p, assert_matching_p_values,
+		counted_p, std_from_true_p,
+		assert_matching_p_values, assert_discrete_uniform,
 	)
 
 
@@ -92,5 +94,25 @@ def test_std_counted_p():
 	np.testing.assert_allclose( stds, control, rtol=3/np.sqrt(m) )
 	np.testing.assert_allclose( stds[:-1], np.mean(estimated_stds,axis=0)[:-1], rtol=3/np.sqrt(m) )
 	# Last element is expected to be unequal, because the estimate cannot reasonably be zero.
+
+@mark.parametrize("size",range(10,100,10))
+@mark.parametrize("n_values",range(2,10))
+def test_assert_discrete_uniform(size,n_values):
+	RNG  = np.random.default_rng(n_values*101+size)
+	
+	values = sorted(RNG.random(n_values-1))+[1]
+	probs = np.diff(values,prepend=0)
+	data = RNG.choice( values, p=probs, size=size, replace=True )
+	assert_discrete_uniform(data)
+
+def test_assert_discrete_uniform_perfect():
+	data = [ 0.1, 0.3, 0.3, 0.7, 0.7, 0.7, 0.7, 1.0, 1.0, 1.0 ]
+	assert_discrete_uniform(data,factor=1)
+
+def test_assert_discrete_uniform_fail():
+	data = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7 ]
+	with raises(AssertionError):
+		assert_discrete_uniform(data)
+
 
 

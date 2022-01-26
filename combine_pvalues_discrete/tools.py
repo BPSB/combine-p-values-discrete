@@ -1,6 +1,6 @@
 from collections import namedtuple
 import numpy as np
-from scipy.stats import binomtest
+from scipy.stats import binomtest, kstwo
 
 def searchsorted_closest(array,values):
 	"""
@@ -74,7 +74,7 @@ def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 	diffs = np.abs( target_p - p + (0 if compare else size_offset) )
 	
 	reference_p = (p+target_p)/2 if compare else target_p
-	with np.errstate(invalid='ignore'):
+	with np.errstate(invalid="ignore",divide="ignore"):
 		ratios = diffs/std_from_true_p(reference_p,n)
 	if np.any(ratios>factor):
 		i = np.nanargmax(ratios-factor)
@@ -89,4 +89,19 @@ def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 				actual: {p[i]}
 				difference / std: {ratios[i]} > {factor}
 			""")
+
+def assert_discrete_uniform(data,factor=3):
+	data = np.asarray(data)
+	values = set(data)
+	if len(values)<2:
+		raise ValueError("Need at least two distinct values.")
+	
+	for value in values:
+		assert_matching_p_values(
+				np.mean(data<=value),
+				value,
+				n = len(data),
+				factor = factor,
+				compare = False
+			)
 
