@@ -2,7 +2,7 @@ import math
 import numpy as np
 from warnings import warn
 
-from .tools import sign_test, counted_p
+from .tools import sign_test, counted_p, Combined_P_Value
 from .pdist import PDist
 
 from scipy.special import erfinv
@@ -138,6 +138,9 @@ def combine(ctrs,method="fisher",weights=None,size=10000000,RNG=None):
 	std
 		The estimated standard deviation of p values when repeating the sampling.
 	"""
+	
+	if len(ctrs)==1:
+		return Combined_P_Value(ctrs[0].p,0)
 	
 	null_samples = np.vstack([ctr.nulldist.sample(RNG,size) for ctr in ctrs])
 	ps = np.array([ctr.p for ctr in ctrs])

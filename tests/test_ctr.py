@@ -49,6 +49,10 @@ def test_commutativity_and_associativity(seed,combo,method,variant):
 	
 	assert_matching_p_values(result_1,result_2,size,factor=3)
 
+@mark.parametrize("example",examples)
+def test_combine_single(example):
+	assert combine([example]).pvalue == example.p
+
 # Reproducing a sign test by combining single comparisons:
 
 @mark.parametrize( "n,replicate", product( range(2,15), range(20) ) )
