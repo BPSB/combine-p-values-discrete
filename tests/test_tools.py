@@ -6,12 +6,28 @@ from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 from scipy.stats import ks_1samp, uniform
 
 from combine_pvalues_discrete.tools import (
+		is_empty,
 		searchsorted_closest,
 		sign_test,
 		counted_p, std_from_true_p,
 		assert_matching_p_values, assert_discrete_uniform,
 	)
 
+@mark.parametrize(
+		" argument     , result",[
+		( None         , True  ),
+		( []           , True  ),
+		( ()           , True  ),
+		( np.array([]) , True  ),
+		( [0]          , False ),
+		( [1]          , False ),
+		(  0           , False ),
+		(  1           , False ),
+		( np.array([0]), False ),
+		( np.array([1]), False ),
+	])
+def test_is_empty(argument,result):
+	assert is_empty(argument) == result
 
 def test_searchsorted_closest():
 	np.testing.assert_array_equal(

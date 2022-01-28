@@ -2,7 +2,7 @@ import math
 import numpy as np
 from warnings import warn
 
-from .tools import sign_test, counted_p, Combined_P_Value
+from .tools import sign_test, counted_p, Combined_P_Value, is_empty
 from .pdist import PDist
 
 from scipy.special import erfinv
@@ -25,7 +25,7 @@ class CTR(object):
 		If `None` or empty, all p values will be considered possible, i.e., the test will be assumed to be continuous.
 	"""
 	def __init__(self,p,all_ps=None):
-		if all_ps and p not in all_ps:
+		if not is_empty(all_ps) and p not in all_ps:
 			all_ps = np.asarray(all_ps)
 			closest = all_ps[np.argmin(np.abs(all_ps-p))]
 			if (closest-p)/p > 1e-10:

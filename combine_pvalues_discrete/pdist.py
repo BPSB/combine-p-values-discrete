@@ -1,4 +1,5 @@
 import numpy as np
+from .tools import is_empty
 
 class PDist(object):
 	"""
@@ -13,7 +14,7 @@ class PDist(object):
 		If empty, this represents the continous uniform distribution.
 	"""
 	def __init__(self,ps):
-		self.ps = np.array([]) if ps is None else np.atleast_1d(ps)
+		self.ps = np.array([]) if is_empty(ps) else np.atleast_1d(ps)
 		self.ps.sort()
 		if not self.continuous:
 			if not ( ( 0 < self.ps[0] ) and ( abs(self.ps[-1]-1) < 1e-10 ) ):

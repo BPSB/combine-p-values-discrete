@@ -2,6 +2,12 @@ from collections import namedtuple
 import numpy as np
 from scipy.stats import binomtest, kstwo
 
+def is_empty(x):
+	try:
+		return len(x)==0
+	except TypeError:
+		return x is None
+
 def searchsorted_closest(array,values):
 	"""
 	Wrapper around NumPy’s `searchsorted` that returns the index of the closest value(s) – as opposed to the next lower or higher one.
