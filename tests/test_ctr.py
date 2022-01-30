@@ -19,30 +19,28 @@ examples = [
 ]
 
 @mark.parametrize(
-		"seed, combo",
-		enumerate(chain(*(
+		"combo",
+		chain(*(
 			combinations_with_replacement(examples,r)
 			for r in range(1,3)
-		)))
+		))
 	)
 @mark.parametrize("method,variant",combining_statistics)
-def test_commutativity_and_associativity(seed,combo,method,variant):
-	RNG = np.random.default_rng(seed)
-	
+def test_commutativity_and_associativity(combo,method,variant,rng):
 	get_p = lambda combo,weights: combine(
 				combo,
 				weights = weights,
-				RNG = RNG,
+				RNG = rng,
 				size = size,
 				method = method
 			).pvalue
 	
 	n = len(combo)
 	combo = np.array(combo)
-	weights = RNG.random(n) if variant=="weighted" else None
+	weights = rng.random(n) if variant=="weighted" else None
 	result_1 = get_p(combo,weights)
 	
-	new_order = RNG.choice(range(n),size=n,replace=False)
+	new_order = rng.choice(range(n),size=n,replace=False)
 	combo = combo[new_order]
 	weights = weights[new_order] if variant=="weighted" else None
 	result_2 = get_p(combo,weights)
@@ -56,18 +54,16 @@ def test_combine_single(example):
 # Reproducing a sign test by combining single comparisons:
 
 @mark.parametrize( "n,replicate", product( range(2,15), range(20) ) )
-def test_comparison_to_sign_test(n,replicate):
-	RNG = np.random.default_rng((n+20)**3*replicate)
-	
+def test_comparison_to_sign_test(n,replicate,rng):
 	def my_sign_test_onesided(X,Y):
 		ctrs = [
 				CTR( 0.5 if x<y else 1, [0.5,1.0] )
 				for x,y in zip(X,Y)
 			]
-		return combine(ctrs,size=size,RNG=RNG,method="fisher").pvalue
+		return combine(ctrs,size=size,RNG=rng,method="fisher").pvalue
 	
-	X = RNG.random(n)
-	Y = RNG.random(n)
+	X = rng.random(n)
+	Y = rng.random(n)
 	
 	assert_matching_p_values(
 		my_sign_test_onesided(X,Y),
@@ -77,7 +73,7 @@ def test_comparison_to_sign_test(n,replicate):
 
 # Reproducing `combine_pvalues` for continuous tests and comparing:
 
-def emulate_continuous_combine_ps(ps,RNG=np.random.default_rng(),**kwargs):
+def emulate_continuous_combine_ps(ps,RNG,**kwargs):
 	ctrs = [ CTR(p) for p in ps ]
 	return combine(ctrs,RNG=RNG,size=size,**kwargs).pvalue
 
@@ -85,53 +81,57 @@ def emulate_continuous_combine_ps(ps,RNG=np.random.default_rng(),**kwargs):
 @mark.parametrize( "method", ["fisher","mudholkar_george","stouffer"] )
 @mark.parametrize( "n", range(2,15) )
 @mark.parametrize( "magnitude", ["small","normal"] )
-def test_compare_with_combine_pvalues(n,method,magnitude):
-	RNG = np.random.default_rng(n)
-	ps = 10**RNG.uniform( -3 if magnitude=="small" else -1, 0, n )
+def test_compare_with_combine_pvalues(n,method,magnitude,rng):
+	ps = 10**rng.uniform( -3 if magnitude=="small" else -1, 0, n )
 	
 	assert_matching_p_values(
-		emulate_continuous_combine_ps(ps,RNG=RNG,method=method),
+		emulate_continuous_combine_ps(ps,RNG=rng,method=method),
 		combine_pvalues(ps,method=method)[1],
 		size,
 	)
 
 @mark.parametrize( "n", range(2,15) )
 @mark.parametrize( "magnitude", ["small","normal"] )
-def test_compare_with_combine_pvalues_weighted(n,magnitude):
-	RNG = np.random.default_rng(n)
-	ps = 10**RNG.uniform( -3 if magnitude=="small" else -1, 0, n )
-	weights = RNG.random(n)
+def test_compare_with_combine_pvalues_weighted(n,magnitude,rng):
+	ps = 10**rng.uniform( -3 if magnitude=="small" else -1, 0, n )
+	weights = rng.random(n)
 	
 	assert_matching_p_values(
-		emulate_continuous_combine_ps(ps,RNG=RNG,method="stouffer",weights=weights),
+		emulate_continuous_combine_ps(ps,RNG=rng,method="stouffer",weights=weights),
 		combine_pvalues(ps,method="stouffer",weights=weights)[1],
 		size,
 	)
 
 @mark.parametrize( "method,variant", combining_statistics )
 @mark.parametrize("variables", ["one", "all"])
-def test_monotony(method,variant,variables):
+def test_monotony(method,variant,variables,rng):
 	# Test that result increases monotonously with respect to input.
 	n,k = 5,7
 	changing_values = np.linspace(0.1,0.9,n)
 	weights = np.random.random(k)
 	pvalues = np.random.random(k)
 	combined_ps = []
+	errors = []
 	for changing_value in changing_values:
-		RNG = np.random.default_rng(42)
 		if variables == "one":
 			pvalues[0] = changing_value
 		else:
 			pvalues = np.full(k,changing_value)
-		combined_p = emulate_continuous_combine_ps(
-					pvalues,
+		ctrs = [ CTR(p) for p in pvalues ]
+		combined_p,error = combine(
+					ctrs,
 					method = method,
 					weights = weights if variant=="weighted" else None,
-					RNG = RNG
+					size = size,
+					RNG = rng,
 				)
 		combined_ps.append(combined_p)
+		errors.append(error)
 	
-	assert np.all( np.diff(combined_ps) >= 0 )
+	errors = np.array(errors)
+	diff_errors = errors[:-1]+errors[1:]
+	
+	assert np.all( np.diff(combined_ps) >= -diff_errors )
 
 # CDF of the standard normal distribution and its inverse for Stouffer’s method.
 phi = lambda z: (1+erf(z/sqrt(2)))/2
@@ -145,16 +145,21 @@ phiinv = lambda x: sqrt(2)*erfinv(2*x-1)
 			("stouffer", phi((phiinv(0.4)+phiinv(0.7)+phiinv(0.9))/sqrt(3)) ),
 		]
 	)
-def test_simple_case(method,solution):
+def test_simple_case(method,solution,rng):
 	assert_matching_p_values(
-		emulate_continuous_combine_ps( [0.9,0.7,0.4], method=method ),
+		emulate_continuous_combine_ps( [0.9,0.7,0.4], method=method, RNG=rng ),
 		solution,
 		size
 	)
 
-def test_simple_weighted_case():
+def test_simple_weighted_case(rng):
 	assert_matching_p_values(
-		emulate_continuous_combine_ps( [0.9,0.7,0.4], weights=[1,2,3], method="stouffer" ),
+		emulate_continuous_combine_ps(
+			[0.9,0.7,0.4],
+			weights = [1,2,3],
+			method = "stouffer",
+			RNG = rng,
+		),
 		phi( (phiinv(0.9)+2*phiinv(0.7)+3*phiinv(0.4)) / sqrt(1**2+2**2+3**2) ),
 		size,
 	)
@@ -164,14 +169,13 @@ def test_simple_weighted_case():
 		for method,variant in combining_statistics
 		if variant=="weighted"
 	))
-def test_identical_weights(method):
-	RNG = np.random.default_rng(abs(hash(method)))
+def test_identical_weights(method,rng):
 	n = 10
-	ps = RNG.random(n)
-	weights = np.full(n,RNG.exponential())
+	ps = rng.random(n)
+	weights = np.full(n,rng.exponential())
 	
 	results = [
-		emulate_continuous_combine_ps(ps,RNG=RNG,method=method,weights=w)
+		emulate_continuous_combine_ps(ps,RNG=rng,method=method,weights=w)
 		for w in [weights,None]
 	]
 	assert_matching_p_values(*results,n=size,factor=4,compare=True)

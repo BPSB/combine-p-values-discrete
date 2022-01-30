@@ -1,7 +1,7 @@
 from pytest import mark, raises
 from itertools import count
 import numpy as np
-from scipy.stats import mannwhitneyu, uniform, ks_1samp
+from scipy.stats import mannwhitneyu
 from math import prod
 
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
@@ -35,8 +35,8 @@ def mwu_data(RNG,n,trend=0):
 		If `trend` is zero, this conforms with the null hypothesis.
 	"""
 	return [(
-			RNG.normal(size=RNG.integers(2,5,endpoint=True))-trend,
-			RNG.normal(size=RNG.integers(2,5,endpoint=True))
+			RNG.normal(size=RNG.randint(2,6))-trend,
+			RNG.normal(size=RNG.randint(2,6))
 		) for _ in range(n) ]
 
 def mwu_logp_sum(data):
@@ -57,7 +57,7 @@ def signtest_data(RNG,n,trend=0):
 	return [(
 			RNG.normal(size=size)-trend,
 			RNG.normal(size=size)
-		) for size in RNG.integers(15,20,endpoint=True,size=n) ]
+		) for size in RNG.randint(15,21,size=n) ]
 
 def signtest_logp_sum(data):
 	return sum(
@@ -73,16 +73,15 @@ tests = {
 @mark.slow
 @mark.parametrize("method,variant",combining_statistics)
 @mark.parametrize("test",tests)
-def test_null_distribution(method,variant,test):
+def test_null_distribution(method,variant,test,rng):
 	test_and_combine,create_data,_ = tests[test]
-	RNG = np.random.default_rng(42)
 	n = 20
 	p_values = [
 		test_and_combine(
-			create_data(RNG,n),
-			RNG = RNG,
+			create_data(rng,n),
+			RNG = rng,
 			method = method,
-			weights = RNG.random(n) if variant=="weighted" else None
+			weights = rng.random(n) if variant=="weighted" else None
 		)
 		for _ in range(30)
 	]
@@ -101,18 +100,17 @@ def create_surrogate(RNG,pairs):
 
 @mark.parametrize("trend",np.linspace(-0.7,0.7,10))
 @mark.parametrize("test",tests)
-def test_compare_with_surrogates(trend,test):
+def test_compare_with_surrogates(trend,test,rng):
 	test_and_combine,create_data,logp_sum = tests[test]
-	RNG = np.random.default_rng(hash(np.exp(trend)))
-	dataset = create_data(RNG,10,trend=trend)
+	dataset = create_data(rng,10,trend=trend)
 	
-	p_from_combine = test_and_combine(dataset,RNG=RNG)
+	p_from_combine = test_and_combine(dataset,RNG=rng)
 	
 	n = 1000
 	
 	original_logp_sum = logp_sum(dataset)
 	surrogate_logp_sums = [
-		logp_sum( create_surrogate(RNG,dataset) )
+		logp_sum( create_surrogate(rng,dataset) )
 		for _ in range(n)
 	]
 	p_from_surrogates = np.average( original_logp_sum >= surrogate_logp_sums )

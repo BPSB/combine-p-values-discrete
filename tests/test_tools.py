@@ -3,7 +3,6 @@ from collections import namedtuple
 from pytest import mark, raises
 import numpy as np
 from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
-from scipy.stats import ks_1samp, uniform
 
 from combine_pvalues_discrete.tools import (
 		is_empty,
@@ -82,13 +81,11 @@ def test_counted_p():
 	assert counted_p(3.5,null_stats).pvalue == 0.4
 	assert counted_p(10 ,null_stats).pvalue == 1.0
 
-def test_std_counted_p():
-	RNG = np.random.default_rng(42)
-	
+def test_std_counted_p(rng):
 	n = 1000  # number of points per dataset
 	m = 10000 # number of datasets
 	k = 30    # number of different p values tested
-	nulls = RNG.uniform(0,1,size=(n,m))
+	nulls = rng.uniform(0,1,size=(n,m))
 	true_ps = np.logspace(-2,0,k)
 	estimated_ps,estimated_stds = counted_p( true_ps[None,None,:], nulls[:,:,None] )
 	assert estimated_ps.shape == (m,k)
@@ -113,12 +110,11 @@ def test_std_counted_p():
 
 @mark.parametrize("size",range(10,100,10))
 @mark.parametrize("n_values",range(2,10))
-def test_assert_discrete_uniform(size,n_values):
-	RNG  = np.random.default_rng(n_values*101+size)
-	
-	values = sorted(RNG.random(n_values-1))+[1]
+def test_assert_discrete_uniform(size,n_values,rng):
+	not_too_low = rng.uniform(0.1,1)
+	values = sorted( np.hstack(( rng.random(n_values-2), [not_too_low,1] )) )
 	probs = np.diff(values,prepend=0)
-	data = RNG.choice( values, p=probs, size=size, replace=True )
+	data = rng.choice( values, p=probs, size=size, replace=True )
 	assert_discrete_uniform(data)
 
 def test_assert_discrete_uniform_perfect():

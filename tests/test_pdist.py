@@ -45,19 +45,18 @@ def test_cumprobs(size):
 	dist = PDist( list(np.random.random(size-1)) + [1] )
 	np.testing.assert_almost_equal( dist.ps, np.cumsum(dist.probs) )
 
-@mark.parametrize("size",2**np.arange(0,10))
-@mark.parametrize("n",10**np.arange(4,7))
+@mark.parametrize("n_ps",2**np.arange(0,10))
+@mark.parametrize("n_samples",10**np.arange(4,7))
 @mark.parametrize("method",("stochastic","proportional"))
-def test_sampling(size,n,method):
-	RNG = np.random.default_rng(42*size*n)
-	if size:
-		dist = PDist( list(RNG.random(size-1)) + [1] )
-		sample = dist.sample(RNG=RNG,size=n,method=method)
+def test_sampling(n_ps,n_samples,method,rng):
+	if n_ps>1:
+		dist = PDist( list(rng.random(n_ps-1)) + [1] )
+		sample = dist.sample(RNG=rng,size=n_samples,method=method)
 		for p,prob in zip(dist,dist.probs):
-			assert np.isclose( np.average(sample==p), prob, atol=3/np.sqrt(n) )
-			assert_matching_p_values( np.average(sample<=p), p, n )
+			assert np.isclose( np.average(sample==p), prob, atol=3/np.sqrt(n_samples) )
+			assert_matching_p_values( np.average(sample<=p), p, n_samples )
 	else:
 		dist = PDist([])
-		sample = dist.sample(RNG=RNG,size=n,method=method)
+		sample = dist.sample(RNG=rng,size=n_samples,method=method)
 		assert ks_1samp(sample,uniform.cdf).pvalue > 0.05
 
