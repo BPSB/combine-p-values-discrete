@@ -26,13 +26,15 @@ examples = [
 		))
 	)
 @mark.parametrize("method,variant",combining_statistics)
-def test_commutativity_and_associativity(combo,method,variant,rng):
+@mark.parametrize("sampling_method",["proportional","stochastic"])
+def test_commutativity_and_associativity(combo,method,variant,sampling_method,rng):
 	get_p = lambda combo,weights: combine(
 				combo,
 				weights = weights,
 				RNG = rng,
 				n_samples = n_samples,
-				method = method
+				method = method,
+				sampling_method = sampling_method,
 			).pvalue
 	
 	n = len(combo)
@@ -45,7 +47,12 @@ def test_commutativity_and_associativity(combo,method,variant,rng):
 	weights = weights[new_order] if variant=="weighted" else None
 	result_2 = get_p(combo,weights)
 	
-	assert_matching_p_values(result_1,result_2,n_samples,factor=3)
+	assert_matching_p_values(
+			result_1,
+			result_2,
+			n_samples,
+			factor = 3 if sampling_method=="proportional" else 4,
+		)
 
 @mark.parametrize("example",examples)
 def test_combine_single(example):
@@ -73,43 +80,59 @@ def test_comparison_to_sign_test(n,replicate,rng):
 
 # Reproducing `combine_pvalues` for continuous tests and comparing:
 
-def emulate_continuous_combine_ps(ps,RNG,**kwargs):
+def emulate_continuous_combine_ps(ps,**kwargs):
 	ctrs = [ CTR(p) for p in ps ]
-	return combine(ctrs,RNG=RNG,n_samples=n_samples,**kwargs).pvalue
+	return combine(ctrs,n_samples=n_samples,**kwargs).pvalue
 
 # Cannot compare with Pearson’s and Tippett’s method due to SciPy Issue #15373
 @mark.parametrize( "method", ["fisher","mudholkar_george","stouffer"] )
-@mark.parametrize( "n", range(2,15) )
+@mark.parametrize( "n", range(2,17,4) )
 @mark.parametrize( "magnitude", ["small","normal"] )
-def test_compare_with_combine_pvalues(n,method,magnitude,rng):
+@mark.parametrize("sampling_method",["proportional","stochastic"])
+def test_compare_with_combine_pvalues(n,method,magnitude,sampling_method,rng):
 	ps = 10**rng.uniform( -3 if magnitude=="small" else -1, 0, n )
 	
 	assert_matching_p_values(
-		emulate_continuous_combine_ps(ps,RNG=rng,method=method),
+		emulate_continuous_combine_ps(
+			ps,
+			method = method,
+			RNG = rng,
+			sampling_method = sampling_method,
+		),
 		combine_pvalues(ps,method=method)[1],
 		n_samples,
+		factor = 3 if sampling_method=="proportional" else 4,
 	)
 
 @mark.parametrize( "n", range(2,15) )
 @mark.parametrize( "magnitude", ["small","normal"] )
-def test_compare_with_combine_pvalues_weighted(n,magnitude,rng):
+@mark.parametrize("sampling_method",["proportional","stochastic"])
+def test_compare_with_combine_pvalues_weighted(n,magnitude,sampling_method,rng):
 	ps = 10**rng.uniform( -3 if magnitude=="small" else -1, 0, n )
 	weights = rng.random(n)
 	
 	assert_matching_p_values(
-		emulate_continuous_combine_ps(ps,RNG=rng,method="stouffer",weights=weights),
+		emulate_continuous_combine_ps(
+			ps,
+			weights=weights,
+			method="stouffer",
+			RNG=rng,
+			sampling_method = sampling_method,
+		),
 		combine_pvalues(ps,method="stouffer",weights=weights)[1],
 		n_samples,
+		factor = 3 if sampling_method=="proportional" else 4,
 	)
 
-@mark.parametrize( "method,variant", combining_statistics )
+@mark.parametrize("method,variant",combining_statistics)
 @mark.parametrize("variables", ["one", "all"])
-def test_monotony(method,variant,variables,rng):
+@mark.parametrize("sampling_method",["proportional","stochastic"])
+def test_monotony(method,variant,variables,sampling_method,rng):
 	# Test that result increases monotonously with respect to input.
 	n,k = 5,7
 	changing_values = np.linspace(0.1,0.9,n)
-	weights = np.random.random(k)
-	pvalues = np.random.random(k)
+	weights = rng.random(k)
+	pvalues = rng.random(k)
 	combined_ps = []
 	errors = []
 	for changing_value in changing_values:
@@ -123,13 +146,14 @@ def test_monotony(method,variant,variables,rng):
 					method = method,
 					weights = weights if variant=="weighted" else None,
 					n_samples = n_samples,
+					sampling_method = sampling_method,
 					RNG = rng,
 				)
 		combined_ps.append(combined_p)
 		errors.append(error)
 	
 	errors = np.array(errors)
-	diff_errors = errors[:-1]+errors[1:]
+	diff_errors = 1.5*(errors[:-1]+errors[1:])
 	
 	assert np.all( np.diff(combined_ps) >= -diff_errors )
 
@@ -145,20 +169,28 @@ phiinv = lambda x: sqrt(2)*erfinv(2*x-1)
 			("stouffer", phi((phiinv(0.4)+phiinv(0.7)+phiinv(0.9))/sqrt(3)) ),
 		]
 	)
-def test_simple_case(method,solution,rng):
+@mark.parametrize("sampling_method",["proportional","stochastic"])
+def test_simple_case(method,solution,sampling_method,rng):
 	assert_matching_p_values(
-		emulate_continuous_combine_ps( [0.9,0.7,0.4], method=method, RNG=rng ),
+		emulate_continuous_combine_ps(
+			[0.9,0.7,0.4],
+			method=method,
+			RNG=rng,
+			sampling_method=sampling_method,
+		),
 		solution,
 		n_samples
 	)
 
-def test_simple_weighted_case(rng):
+@mark.parametrize("sampling_method",["proportional","stochastic"])
+def test_simple_weighted_case(sampling_method,rng):
 	assert_matching_p_values(
 		emulate_continuous_combine_ps(
 			[0.9,0.7,0.4],
 			weights = [1,2,3],
 			method = "stouffer",
 			RNG = rng,
+			sampling_method=sampling_method,
 		),
 		phi( (phiinv(0.9)+2*phiinv(0.7)+3*phiinv(0.4)) / sqrt(1**2+2**2+3**2) ),
 		n_samples,
@@ -169,13 +201,20 @@ def test_simple_weighted_case(rng):
 		for method,variant in combining_statistics
 		if variant=="weighted"
 	))
-def test_identical_weights(method,rng):
+@mark.parametrize("sampling_method",["proportional","stochastic"])
+def test_identical_weights(method,sampling_method,rng):
 	n = 10
 	ps = rng.random(n)
 	weights = np.full(n,rng.exponential())
 	
 	results = [
-		emulate_continuous_combine_ps(ps,RNG=rng,method=method,weights=w)
+		emulate_continuous_combine_ps(
+			ps,
+			RNG=rng,
+			method=method,
+			weights=w,
+			sampling_method=sampling_method,
+		)
 		for w in [weights,None]
 	]
 	assert_matching_p_values(*results,n=n_samples,factor=4,compare=True)

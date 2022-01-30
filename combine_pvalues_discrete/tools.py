@@ -51,11 +51,10 @@ def counted_p(orig_stat,null_stats):
 	size = null_stats.shape[0]
 	count = np.sum( orig_stat>=null_stats, axis=0 )
 	p = (count+1)/(size+1)
-	std = np.sqrt(count*(1-count/size))/(size+1)
-	if std.shape:
-		std[std==0] = 1/(size+1)
-	elif std==0:
-		std = 1/(size+1)
+	std = np.maximum(
+			np.sqrt(count*(1-count/size))/(size+1),
+			1/(size+1),
+		)
 	return Combined_P_Value(p,std)
 
 def std_from_true_p(true_p,size):
@@ -82,6 +81,7 @@ def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 	reference_p = (p+target_p)/2 if compare else target_p
 	with np.errstate(invalid="ignore",divide="ignore"):
 		ratios = diffs/std_from_true_p(reference_p,n)
+	
 	if np.any(ratios>factor):
 		i = np.nanargmax(ratios-factor)
 		

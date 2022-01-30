@@ -148,7 +148,7 @@ def combine(
 		The estimated combined p value.
 	
 	std
-		The estimated standard deviation of p values when repeating the sampling.
+		The estimated standard deviation of p values when repeating the sampling. This is accurate for stochastic sampling and overestimating for proportional sampling.
 	"""
 	
 	if len(ctrs)==1:

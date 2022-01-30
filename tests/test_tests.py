@@ -72,8 +72,9 @@ tests = {
 
 @mark.slow
 @mark.parametrize("method,variant",combining_statistics)
+@mark.parametrize("sampling_method",["proportional","stochastic"])
 @mark.parametrize("test",tests)
-def test_null_distribution(method,variant,test,rng):
+def test_null_distribution(method,variant,test,sampling_method,rng):
 	test_and_combine,create_data,_ = tests[test]
 	n = 20
 	p_values = [
@@ -81,6 +82,7 @@ def test_null_distribution(method,variant,test,rng):
 			create_data(rng,n),
 			RNG = rng,
 			method = method,
+			sampling_method = sampling_method,
 			weights = rng.random(n) if variant=="weighted" else None
 		)
 		for _ in range(30)
@@ -99,8 +101,9 @@ def create_surrogate(RNG,pairs):
 	]
 
 @mark.parametrize("trend",np.linspace(-0.7,0.7,10))
+@mark.parametrize("sampling_method",["proportional","stochastic"])
 @mark.parametrize("test",tests)
-def test_compare_with_surrogates(trend,test,rng):
+def test_compare_with_surrogates(trend,test,sampling_method,rng):
 	test_and_combine,create_data,logp_sum = tests[test]
 	dataset = create_data(rng,10,trend=trend)
 	
