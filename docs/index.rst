@@ -20,6 +20,8 @@ This module addresses this and thus you should consider it if:
 * At least one of the sub-tests is *discrete* with a low number of possible *p* values. What is a “low number” depends on the details, but 30 almost always is.
 * The combined *p* value returned by `combine_pvalues` is not very low already.
 
+Also see `comparison`, for a hands-on example, where only combining *p* values with accounting for the discreteness of tests yield the correct result.
+
 Discrete and continuous tests
 `````````````````````````````
 
@@ -74,7 +76,14 @@ A simple example
 ----------------
 
 .. automodule:: simple_example
-..
+
+
+.. _comparison:
+
+An extensive example
+--------------------
+
+.. automodule:: comparison
 
 What needs to be done
 ---------------------
@@ -84,7 +93,6 @@ This module is work in progress:
 * The core structures and two tests are finished.
 * Everything you *can* use is thoroughly tested.
 * So far, only the sign test and Mann–Whitney *U* test are supported.
-* An extensive example illustrating why you need this method and that it works is planned.
 * An instruction for implementing your own tests is planned.
 
 Command reference
