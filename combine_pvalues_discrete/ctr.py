@@ -108,7 +108,12 @@ combining_statistics = {
 
 statistics_with_inf = {"pearson","mudholkar_george","stouffer"}
 
-def combine(ctrs,method="fisher",weights=None,size=10000000,RNG=None):
+def combine(
+		ctrs, weights=None,
+		method="fisher",
+		n_samples=10000000, sampling_method="proportional",
+		RNG=None,
+	):
 	"""
 	Estimates the combined p value of combinable test results. Usually, this result is why you are doing all this.
 	
@@ -123,12 +128,19 @@ def combine(ctrs,method="fisher",weights=None,size=10000000,RNG=None):
 	weights: iterable of numbers
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
 	
-	size
+	n_samples
 		Number of samples used for Monte Carlo simulation.
 	
 	RNG
 		NumPy random-number generator used for the Monte Carlo simulation.
 		Will be automatically generated if not specified.
+	
+	sampling_method: "proportional" or "stochastic"
+		If `"proportional"`, the frequency p values for each individual result will be exactly proportional to its probability – except for rounding. Only the rounding and the order of elements will be stochastic.
+		
+		If `method` is `"stochastic"`, the values will be randomly sampled and thus their actual frequencies are subject to stochastic fluctuations. This usually leads to slightly less accurate results, but the simulations are statistically independent.
+		
+		The author of these lines cannot think of any disadvantage to the latter approach.
 	
 	Returns
 	-------
@@ -142,7 +154,10 @@ def combine(ctrs,method="fisher",weights=None,size=10000000,RNG=None):
 	if len(ctrs)==1:
 		return Combined_P_Value(ctrs[0].p,0)
 	
-	null_samples = np.vstack([ctr.nulldist.sample(RNG,size) for ctr in ctrs])
+	null_samples = np.vstack([
+		ctr.nulldist.sample(RNG,n_samples,method=sampling_method)
+		for ctr in ctrs
+	])
 	ps = np.array([ctr.p for ctr in ctrs])
 	
 	kwargs = {"divide":"ignore","invalid":"ignore"} if (method in statistics_with_inf) else {}

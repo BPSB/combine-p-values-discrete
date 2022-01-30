@@ -9,7 +9,7 @@ from scipy.special import erf, erfinv
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
 from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values
 
-size = 100000
+n_samples = 100000
 
 examples = [
 	CTR( 0.5, [0.5,      1] ),
@@ -31,7 +31,7 @@ def test_commutativity_and_associativity(combo,method,variant,rng):
 				combo,
 				weights = weights,
 				RNG = rng,
-				size = size,
+				n_samples = n_samples,
 				method = method
 			).pvalue
 	
@@ -45,7 +45,7 @@ def test_commutativity_and_associativity(combo,method,variant,rng):
 	weights = weights[new_order] if variant=="weighted" else None
 	result_2 = get_p(combo,weights)
 	
-	assert_matching_p_values(result_1,result_2,size,factor=3)
+	assert_matching_p_values(result_1,result_2,n_samples,factor=3)
 
 @mark.parametrize("example",examples)
 def test_combine_single(example):
@@ -60,7 +60,7 @@ def test_comparison_to_sign_test(n,replicate,rng):
 				CTR( 0.5 if x<y else 1, [0.5,1.0] )
 				for x,y in zip(X,Y)
 			]
-		return combine(ctrs,size=size,RNG=rng,method="fisher").pvalue
+		return combine(ctrs,n_samples=n_samples,RNG=rng,method="fisher").pvalue
 	
 	X = rng.random(n)
 	Y = rng.random(n)
@@ -68,14 +68,14 @@ def test_comparison_to_sign_test(n,replicate,rng):
 	assert_matching_p_values(
 		my_sign_test_onesided(X,Y),
 		sign_test(X,Y)[0],
-		size,
+		n_samples,
 	)
 
 # Reproducing `combine_pvalues` for continuous tests and comparing:
 
 def emulate_continuous_combine_ps(ps,RNG,**kwargs):
 	ctrs = [ CTR(p) for p in ps ]
-	return combine(ctrs,RNG=RNG,size=size,**kwargs).pvalue
+	return combine(ctrs,RNG=RNG,n_samples=n_samples,**kwargs).pvalue
 
 # Cannot compare with Pearson’s and Tippett’s method due to SciPy Issue #15373
 @mark.parametrize( "method", ["fisher","mudholkar_george","stouffer"] )
@@ -87,7 +87,7 @@ def test_compare_with_combine_pvalues(n,method,magnitude,rng):
 	assert_matching_p_values(
 		emulate_continuous_combine_ps(ps,RNG=rng,method=method),
 		combine_pvalues(ps,method=method)[1],
-		size,
+		n_samples,
 	)
 
 @mark.parametrize( "n", range(2,15) )
@@ -99,7 +99,7 @@ def test_compare_with_combine_pvalues_weighted(n,magnitude,rng):
 	assert_matching_p_values(
 		emulate_continuous_combine_ps(ps,RNG=rng,method="stouffer",weights=weights),
 		combine_pvalues(ps,method="stouffer",weights=weights)[1],
-		size,
+		n_samples,
 	)
 
 @mark.parametrize( "method,variant", combining_statistics )
@@ -122,7 +122,7 @@ def test_monotony(method,variant,variables,rng):
 					ctrs,
 					method = method,
 					weights = weights if variant=="weighted" else None,
-					size = size,
+					n_samples = n_samples,
 					RNG = rng,
 				)
 		combined_ps.append(combined_p)
@@ -149,7 +149,7 @@ def test_simple_case(method,solution,rng):
 	assert_matching_p_values(
 		emulate_continuous_combine_ps( [0.9,0.7,0.4], method=method, RNG=rng ),
 		solution,
-		size
+		n_samples
 	)
 
 def test_simple_weighted_case(rng):
@@ -161,7 +161,7 @@ def test_simple_weighted_case(rng):
 			RNG = rng,
 		),
 		phi( (phiinv(0.9)+2*phiinv(0.7)+3*phiinv(0.4)) / sqrt(1**2+2**2+3**2) ),
-		size,
+		n_samples,
 	)
 
 @mark.parametrize("method",(
@@ -178,6 +178,6 @@ def test_identical_weights(method,rng):
 		emulate_continuous_combine_ps(ps,RNG=rng,method=method,weights=w)
 		for w in [weights,None]
 	]
-	assert_matching_p_values(*results,n=size,factor=4,compare=True)
+	assert_matching_p_values(*results,n=n_samples,factor=4,compare=True)
 
 

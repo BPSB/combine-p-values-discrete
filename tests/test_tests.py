@@ -7,7 +7,7 @@ from math import prod
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
 from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values, assert_discrete_uniform
 
-size = 100000
+n_samples = 100000
 
 # All tests occur with the alternative "less".
 
@@ -27,7 +27,7 @@ def test_simple_signtest():
 
 def mwu_combine( data, **kwargs ):
 	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]
-	return combine(ctrs,size=size,**kwargs).pvalue
+	return combine(ctrs,n_samples=n_samples,**kwargs).pvalue
 
 def mwu_data(RNG,n,trend=0):
 	"""
@@ -47,7 +47,7 @@ def mwu_logp_sum(data):
 
 def signtest_combine( data, **kwargs ):
 	ctrs = [ CTR.sign_test(X,Y,alternative="less") for X,Y in data ]
-	return combine(ctrs,size=size,**kwargs).pvalue
+	return combine(ctrs,n_samples=n_samples,**kwargs).pvalue
 
 def signtest_data(RNG,n,trend=0):
 	"""
@@ -118,7 +118,7 @@ def test_compare_with_surrogates(trend,test,rng):
 	assert_matching_p_values(
 			p_from_surrogates,
 			p_from_combine,
-			n = min(size,n),
+			n = min(n_samples,n),
 			factor=3, compare=True,
 		)
 

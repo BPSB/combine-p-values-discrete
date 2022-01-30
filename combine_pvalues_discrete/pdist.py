@@ -54,7 +54,7 @@ class PDist(object):
 		
 		If `method` is `"proportional"`, the frequency of each value will be exactly proportional to its probability – except for rounding. Only the rounding and the order of elements will be stochastic.
 		
-		If `method` is `"stochastic"`, the values will be randomly sampled and thus their actual frequencies are subject to stochastic fluctuations. This usually leads to slightly less accurate results.
+		If `method` is `"stochastic"`, the values will be randomly sampled and thus their actual frequencies are subject to stochastic fluctuations. This usually leads to slightly less accurate results, but independent samples.
 		"""
 		RNG = RNG or np.random.default_rng()
 		
