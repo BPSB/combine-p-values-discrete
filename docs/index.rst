@@ -91,7 +91,7 @@ Command reference
 -----------------
 
 .. automodule:: combine_pvalues_discrete
-	:members: CTR, PDist, sign_test
+	:members: CTR, combine, sign_test
 
 
 

@@ -1,5 +1,5 @@
-from .tools import sign_test
 from .ctr import CTR, combine
+from .tools import sign_test
 
 try:
 	from .version import version as __version__
