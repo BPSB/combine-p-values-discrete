@@ -1,6 +1,5 @@
 from .tools import sign_test
 from .ctr import CTR, combine
-from .pdist import PDist
 
 try:
 	from .version import version as __version__
