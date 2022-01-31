@@ -5,9 +5,9 @@
 In this example, we illustrate the benefits of this module by comparing it with other approaches to the same dataset, all of which yield wrong results or consume a lot of time.
 
 Suppose we want to to explore the effect on a drug on dogs.
-We expect our observable (by which we measure the drug) be more affected by the breed than by the drug.
+We expect our observable (by which we measure the effect of the drug) be more affected by the dog breed than by the drug, e.g., because a poodle is generally weaker than a mastiff.
 Therefore we group the dogs by breed a priori, creating sub-datasets.
-The dogs from each group randomly get administered the drug or a placebo.
+Each breed group gets further randomly split into a treatment and control group.
 Since not all dogs complete the study, our sub-datasets become very inhomogeneous in sample size.
 
 Our data looks like this:
@@ -21,8 +21,8 @@ Each pair represents one breed, with the first half being the control group and 
 If our drug works as desired, the second half should exhibit higher values.
 Finally, due to the nature of our observable, we only want to use a ranked statistics.
 
-Thus, we want to investigate the null hypothesis that for each sub-dataset, both samples are from distributions with the same median (the null hypothesis of the Mann–Whitney *U* test).
-The alternative hypothesis is that that the first pair of samples is from a distribution with a lower median.
+Thus, we want to investigate the null hypothesis that for each sub-dataset, both samples are from the same distribution (or more precisely, the null hypothesis of the Mann–Whitney *U* test).
+The alternative hypothesis is that that the first pair of samples are from a distribution with a lower median.
 
 First, suppose we discard our information on breeds and pool the control and treatment groups.
 We then apply the Mann–Whitney *U* test to the pooled samples.
@@ -31,7 +31,7 @@ This way, we do not need to combine tests, but we lose statistical power.
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 15-19
+	:lines: 15-20
 
 Alternatively, we can summarise the samples in each pair by their median and use the sign test to compare the groups.
 Again, we discard information and lose statistical power:
@@ -39,7 +39,7 @@ Again, we discard information and lose statistical power:
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 22-27
+	:lines: 22-29
 
 To properly take into account all information, we have to apply the Mann–Whitney *U* test to each pair (breed) and then combine the *p* values.
 SciPy’s `combine_pvalues` allows us to do this, but it requires continuous tests.
@@ -48,26 +48,26 @@ Since the Mann–Whitney *U* test does not fulfil this requirement, we will ove
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 30-33
+	:lines: 32-36
 
-By using this module, you can take into account the discreteness of tests, obtaining a correct combined *p* value:
+Finally, by using this module, we can take into account the discreteness of tests, obtaining a correct combined *p* value:
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 36-39
+	:lines: 39-43
 
 Checking the Result
 ```````````````````
 
-Finally, let’s convince ourselves that this result is actually correct.
-To this end, we first implement the statistic of Fisher’s method for combining tests.
+Let’s convince ourselves that the result of `combine` is actually correct.
+To this end, we first implement the statistic of Fisher’s method for combining Mann–Whitney *U* tests.
 Note how the result agrees with that of applying `combine_pvalues` above:
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 42-48
+	:lines: 46-52
 
 
 Next we implement a function that samples analogous datasets corresponding to our null hypothesis (surrogates).
@@ -76,19 +76,18 @@ Next we implement a function that samples analogous datasets corresponding to ou
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 50-55
+	:lines: 54-59
 
 Finally we sample `n=10000` times from our null model and estimate the *p* value by comparing the values of Fisher’s statistic for the null model and the original data.
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 57-61
+	:lines: 61-65
 
 This confirms the low *p* value we obtained with `combine` above and that the *p* values obtained with the other methods were too high.
-Note that this value is several standard deviations away from the result of `combine`.
-This is not due the former result or the standard deviation being incorrect, but due to `n` being so low.
-Obtaining a comparable precision with the null-model approach would require an excessive amount of time.
+You may note that this value does not agree with the result of `combine` from above.
+The reason for this is that the variability of the null-model approach is so high (on account of `n` being low) and obtaining a precision comparable to `compare` would require an excessive amount of time.
 """
 
 if __name__ == "__main__":
@@ -108,6 +107,7 @@ if __name__ == "__main__":
 	
 	# Pooling data and MWU test
 	from scipy.stats import mannwhitneyu
+	
 	pooled_Xs = [ x for X,Y in data for x in X ]
 	pooled_Ys = [ y for X,Y in data for y in Y ]
 	print( mannwhitneyu(pooled_Xs,pooled_Ys,alternative="less") )
@@ -116,6 +116,7 @@ if __name__ == "__main__":
 	# Summarizing data and sign test
 	import numpy as np
 	from combine_pvalues_discrete import sign_test
+	
 	reduced_Xs = [ np.median(X) for X,Y in data ]
 	reduced_Ys = [ np.median(Y) for X,Y in data ]
 	print( sign_test( reduced_Xs, reduced_Ys, alternative="less" ) )
@@ -123,13 +124,15 @@ if __name__ == "__main__":
 	
 	# Combining MWU results without respecting discreteness
 	from scipy.stats import combine_pvalues, mannwhitneyu
+	
 	pvalues = [ mannwhitneyu(X,Y,alternative="less").pvalue for X,Y in data ]
 	print( combine_pvalues(pvalues,method="fisher") )
 	# (27.447712265267114, 0.123131292229715)
 	
 	# Combining MWU results with respecting discreteness
 	from combine_pvalues_discrete import CTR, combine
-	ctrs = [CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]
+	
+	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]
 	print( combine(ctrs,method="fisher") )
 	# Combined_P_Value(pvalue=0.0014229998577000142, std=1.1920046440408576e-05)
 	
