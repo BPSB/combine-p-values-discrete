@@ -120,7 +120,7 @@ if __name__ == "__main__":
 	reduced_Xs = [ np.median(X) for X,Y in data ]
 	reduced_Ys = [ np.median(Y) for X,Y in data ]
 	print( sign_test( reduced_Xs, reduced_Ys, alternative="less" ) )
-	# (0.171875, 10)
+	# SignTestResult(pvalue=0.171875, not_tied=10, statistic=3)
 	
 	# Combining MWU results without respecting discreteness
 	from scipy.stats import combine_pvalues, mannwhitneyu

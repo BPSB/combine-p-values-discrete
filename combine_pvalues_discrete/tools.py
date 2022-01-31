@@ -21,6 +21,8 @@ def searchsorted_closest(array,values):
 	left_or_right = values-array[left_idcs] < array[right_idcs]-values
 	return np.choose( left_or_right, (right_idcs,left_idcs) )
 
+SignTestResult = namedtuple("SignTestResult",("pvalue","not_tied","statistic"))
+
 def sign_test(x,y=0,alternative="less"):
 	"""
 	Sign test.
@@ -39,7 +41,11 @@ def sign_test(x,y=0,alternative="less"):
 	greater = np.sum(x>y)
 	less    = np.sum(x<y)
 	non_tied = less+greater
-	return binomtest( greater, non_tied, alternative=alternative ).pvalue, non_tied
+	return SignTestResult(
+			binomtest( greater, non_tied, alternative=alternative ).pvalue,
+			non_tied,
+			greater,
+		)
 
 Combined_P_Value = namedtuple("Combined_P_Value",("pvalue","std"))
 

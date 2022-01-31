@@ -80,7 +80,7 @@ class CTR(object):
 		if "alternative" == "two-sided":
 			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
 		
-		p,m = sign_test(x,y,alternative)
+		p,m,_ = sign_test(x,y,alternative)
 		
 		all_ps = list( np.cumsum([math.comb(m,i)/2**m for i in range(m)]) ) + [1]
 		return cls( p, all_ps )
