@@ -48,14 +48,14 @@ Since the Mann–Whitney *U* test does not fulfil this requirement, we will ove
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 32-36
+	:lines: 32-37
 
 Finally, by using this module, we can take into account the discreteness of tests, obtaining a correct combined *p* value:
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 39-43
+	:lines: 40-44
 
 Checking the Result
 ```````````````````
@@ -67,7 +67,7 @@ Note how the result agrees with that of applying `combine_pvalues` above:
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 46-52
+	:lines: 47-53
 
 
 Next we implement a function that samples analogous datasets corresponding to our null hypothesis (surrogates).
@@ -76,14 +76,14 @@ Next we implement a function that samples analogous datasets corresponding to ou
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 54-59
+	:lines: 55-60
 
 Finally we sample `n=10000` times from our null model and estimate the *p* value by comparing the values of Fisher’s statistic for the null model and the original data.
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 61-65
+	:lines: 62-66
 
 This confirms the low *p* value we obtained with `combine` above and that the *p* values obtained with the other methods were too high.
 You may note that this value does not agree with the result of `combine` from above.
@@ -126,7 +126,8 @@ if __name__ == "__main__":
 	from scipy.stats import combine_pvalues, mannwhitneyu
 	
 	pvalues = [ mannwhitneyu(X,Y,alternative="less").pvalue for X,Y in data ]
-	print( combine_pvalues(pvalues,method="fisher") )
+	statistic,pvalue = combine_pvalues(pvalues,method="fisher")
+	print(statistic,pvalue)
 	# (27.447712265267114, 0.123131292229715)
 	
 	# Combining MWU results with respecting discreteness
