@@ -138,7 +138,7 @@ def combine(
 		* A two-dimensional array `q` containing their complements.
 		* A one-dimensional array `w` containing the weights.
 		The function must return the statistics computed along the zero-th axis.
-		For example for the weighted Mudholkar–George method, this function would be `p,q,w:  w.dot(np.log(p/q))`.
+		For example for the weighted Mudholkar–George method, this function would be `lambda p,q,w:  w.dot(np.log(p/q))`.
 	
 	weights: iterable of numbers
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
