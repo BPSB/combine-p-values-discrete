@@ -1,4 +1,5 @@
 import math
+from inspect import signature
 import numpy as np
 from warnings import warn
 
@@ -35,6 +36,7 @@ class CTR(object):
 		
 		self.p = p
 		self.nulldist = PDist(all_ps)
+		self.q = self.nulldist.complement(self.p)
 	
 	@classmethod
 	def mann_whitney_u( cls, x, y, **kwargs ):
@@ -92,21 +94,27 @@ class CTR(object):
 		return self.p==other.p and self.nulldist==other.nulldist
 
 combining_statistics = {
-	("fisher"          ,"normal"  ): lambda x:  np.sum( np.log(x)       , axis=0 ),
-	("pearson"         ,"normal"  ): lambda x: -np.sum( np.log(1-x)     , axis=0 ),
-	("mudholkar_george","normal"  ): lambda x:  np.sum( np.log(x/(1-x)) , axis=0 ),
-	("stouffer"        ,"normal"  ): lambda x:  np.sum( erfinv(2*x-1)   , axis=0 ),
-	("tippett"         ,"normal"  ): lambda x:  np.min( x               , axis=0 ),
-	("edgington"       ,"normal"  ): lambda x:  np.sum( x               , axis=0 ),
-	("simes"           ,"normal"  ): lambda x:  np.min(x/rankdata(x,axis=0,method="ordinal"),axis=0),
-	("fisher"          ,"weighted"): lambda x,w:  w.dot(np.log(x))      ,
-	("pearson"         ,"weighted"): lambda x,w: -w.dot(np.log(1-x))    ,
-	("mudholkar_george","weighted"): lambda x,w:  w.dot(np.log(x/(1-x))),
-	("stouffer"        ,"weighted"): lambda x,w:  w.dot(erfinv(2*x-1))  ,
-	("edgington"       ,"weighted"): lambda x,w:  w.dot(x)              ,
+	("fisher"          ,"normal"  ): lambda p:  np.sum( np.log(p)     , axis=0 ),
+	("pearson"         ,"normal"  ): lambda q: -np.sum( np.log(q)     , axis=0 ),
+	("mudholkar_george","normal"  ): lambda p,q:  np.sum( np.log(p/q) , axis=0 ),
+	("stouffer"        ,"normal"  ): lambda p:  np.sum( erfinv(2*p-1) , axis=0 ),
+	("tippett"         ,"normal"  ): lambda p:  np.min( p             , axis=0 ),
+	("edgington"       ,"normal"  ): lambda p:  np.sum( p             , axis=0 ),
+	("simes"           ,"normal"  ): lambda p:  np.min(p/rankdata(p,axis=0,method="ordinal"),axis=0),
+	("fisher"          ,"weighted"): lambda p,w:    w.dot(np.log(p))     ,
+	("pearson"         ,"weighted"): lambda q,w:   -w.dot(np.log(q))     ,
+	("mudholkar_george","weighted"): lambda p,q,w:  w.dot(np.log(p/q))   ,
+	("stouffer"        ,"weighted"): lambda p,w:    w.dot(erfinv(2*p-1)) ,
+	("edgington"       ,"weighted"): lambda p,w:    w.dot(p)             ,
 }
 
-statistics_with_inf = {"pearson","mudholkar_george","stouffer"}
+def has_arg(statistic,*args):
+	return all(
+			arg in signature(statistic).parameters
+			for arg in args
+		)
+
+statistics_with_inf = {"stouffer"}
 
 def combine(
 		ctrs, weights=None,
@@ -123,7 +131,14 @@ def combine(
 		The test results that shall be combined.
 	
 	method: string or function
-		One of "fisher", "pearson", "mudholkar_george", "stouffer", "tippett", "edgington", "simes", or a self-defined function that takes a two-dimensional array and computes the test statistics alongth the zero-th axis.
+		One of "fisher", "pearson", "mudholkar_george", "stouffer", "tippett", "edgington", "simes", or a self-defined function.
+
+		In the latter case, the function can have the following arguments (which must be named as given):
+		* A two-dimensional array `p` containing the p values.
+		* A two-dimensional array `q` containing their complements.
+		* A one-dimensional array `w` containing the weights.
+		The function must return the statistics computed along the zero-th axis.
+		For example for the weighted Mudholkar–George method, this function would be `p,q,w:  w.dot(np.log(p/q))`.
 	
 	weights: iterable of numbers
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
@@ -154,14 +169,6 @@ def combine(
 	if len(ctrs)==1:
 		return Combined_P_Value(ctrs[0].p,0)
 	
-	null_samples = np.vstack([
-		ctr.nulldist.sample(RNG,n_samples,method=sampling_method)
-		for ctr in ctrs
-	])
-	ps = np.array([ctr.p for ctr in ctrs])
-	
-	kwargs = {"divide":"ignore","invalid":"ignore"} if (method in statistics_with_inf) else {}
-	
 	if method in (method for method,_ in combining_statistics):
 		if weights is None:
 			statistic = combining_statistics[method,"normal"]
@@ -175,14 +182,41 @@ def combine(
 			raise ValueError(f'Method "{method}" is neither known nor callable.')
 		statistic = method
 	
-	with np.errstate(**kwargs):
-		if weights is None:
-			orig_stat = statistic(ps)
-			null_stats = statistic(null_samples)
-		else:
-			weights = np.asarray(weights)
-			orig_stat = statistic(ps,weights)
-			null_stats = statistic(null_samples,weights)
+	kwargs_null = {}
+	kwargs_orig = {}
+	sampling_kwargs = dict(RNG=RNG,size=n_samples,method=sampling_method)
+	
+	if has_arg(statistic,"p","q"):
+		kwargs_null["p"] = np.empty((len(ctrs),n_samples))
+		kwargs_null["q"] = np.empty((len(ctrs),n_samples))
+		for ctr,target_p,target_q in zip(ctrs,kwargs_null["p"],kwargs_null["q"]):
+			# target[:] to overwrite the content of target instead of reassigning the variable.
+			target_p[:],target_q[:] = ctr.nulldist.sample_both(**sampling_kwargs)
+	else:
+		if has_arg(statistic,"p"):
+			kwargs_null["p"] = np.vstack([
+				ctr.nulldist.sample(**sampling_kwargs)
+				for ctr in ctrs
+			])
+		if has_arg(statistic,"q"):
+			kwargs_null["q"] = np.vstack([
+				ctr.nulldist.sample_complement(**sampling_kwargs)
+				for ctr in ctrs
+			])
+	
+	if has_arg(statistic,"p"):
+		kwargs_orig["p"] = np.array([ctr.p for ctr in ctrs])
+	if has_arg(statistic,"q"):
+		kwargs_orig["q"] = np.array([ctr.q for ctr in ctrs])
+	
+	if weights is not None:
+		for kwargs in (kwargs_null,kwargs_orig):
+			kwargs["w"] = np.asarray(weights)
+	
+	err_kwargs = {"divide":"ignore","invalid":"ignore"} if (method in statistics_with_inf) else {}
+	with np.errstate(**err_kwargs):
+		orig_stat = statistic(**kwargs_orig)
+		null_stats = statistic(**kwargs_null)
 	
 	return counted_p( orig_stat, null_stats)
 

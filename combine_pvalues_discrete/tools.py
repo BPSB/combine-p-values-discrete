@@ -92,7 +92,7 @@ def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 		i = np.nanargmax(ratios-factor)
 		
 		try: target = target_p[i]
-		except IndexError: target=target_p
+		except (IndexError,TypeError): target=target_p
 		
 		raise AssertionError(
 			f"""

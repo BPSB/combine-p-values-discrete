@@ -88,7 +88,7 @@ def test_null_distribution(method,variant,test,sampling_method,rng):
 		for _ in range(30)
 	]
 	
-	assert_discrete_uniform(p_values)
+	assert_discrete_uniform(p_values,factor=3.2)
 
 def create_surrogate(RNG,pairs):
 	"""
