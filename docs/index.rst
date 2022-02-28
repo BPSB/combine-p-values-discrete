@@ -25,7 +25,7 @@ Also see `comparison`, for a hands-on example, where only combining *p* values 
 Discrete and continuous tests
 `````````````````````````````
 
-If the null hypothesis of a given test holds, its *p* values are uniformly distributed on the interval :math:`(0,1]` in the sense that :math:`\text{CDF}(p) = p`.
+If the null hypothesis of a given test holds, its *p* values are uniformly distributed on the interval :math:`(0,1]` in the sense that :math:`\text{CDF}(p_0) = P(p≤p_0) = p_0`.
 However, for some tests, there is a limited number of possible outcomes for a given sample size.
 For example, the only possible outcomes (*p* values) of the one-sided sign test for a sample size of 5 are
 :math:`\frac{ 1}{32}`,
@@ -76,7 +76,7 @@ Some combining methods such as Pearson’s or Mudholkar’s and George’s use t
 For continuous tests, this complement is straightforwardly computed as :math:`q = 1-p`.
 However, when combining discrete tests this leads to implausible results if :math:`p=1`.
 To avoid this, this module uses for *q* the probability to observe such a *p* value or a higher one.
-In analogy to :math:`\text{CDF}(p) = p`, we have :math:`\text{CCDF}(p) = q` (both under the null hypothesis).
+In analogy to :math:`\text{CDF}(p_0) = P(p≤p_0) = p_0`, we have :math:`\text{CCDF}(p_0) = P(p≥0) = q` (both under the null hypothesis).
 
 A simple example
 ----------------
