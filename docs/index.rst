@@ -125,7 +125,7 @@ In this case, you would perform one-sided subtests.
 (If you would consider both directions of trend a finding, the combination needs to be two-sided, not the subtests.)
 
 If the *p* value of such a subtest is small, the sub-dataset exhibits the trend you hypothesised.
-Conversely, if the complement *q ≈ 1−p* of a subtest is small, the sub-dataset exhibits a trend opposite to what you hypothesised – with a *p* value *q*.
+Conversely, if the complement :math:`q ≈ 1-p` of a subtest is small, the sub-dataset exhibits a trend opposite to what you hypothesised – with a *p* value *q*.
 (See `complements` on how *q* is defined for the purposes of this module.)
 I think that the combined *p* values should reflect this, i.e., the complement *q* should indicate the significance of the opposite one-sided hypothesis (not the null hypothesis) just like the *p* value indicates the significance of the null hypothesis.
 
@@ -136,7 +136,7 @@ This also means that the following results exactly negate each other:
 * a subtest with :math:`q=p_0`, i.e., :math:`p≈1-p_0`.
 
 Only two methods fulfil this: the one by Mudholkar and George as well as the one by Stouffer.
-Since the latter’s statistics becomes infinite if :math:`p=1` for any subtest (and thus cannot distinguish between this happening for one or almost all tests), I prefer Mudholkar’s and George’s method.
+Since the latter’s statistics becomes infinite if :math:`p=1` for any subtest (and thus cannot distinguish between this happening for one or almost all tests), I prefer Mudholkar’s and George’s method.
 
 
 What needs to be done
