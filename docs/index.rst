@@ -13,14 +13,14 @@ This module has a scope similar to SciPy’s `combine_pvalues`_:
 * There is no straightforward test to apply to the entire dataset.
 * You want a single *p* value for the null hypothesis taking into account the entire dataset, i.e., you want to combine your test results for the sub-datasets.
 
-**However,** `combine_pvalues` assumes that the individual tests are continuous (see below what this means), while applying it to discrete tests will yield a systematically wrong combined *p* value.
+**However,** `combine_pvalues` assumes that the individual tests are continuous (see below for a definition), while applying it to discrete tests will yield a systematically wrong combined *p* value.
 For example, for `Fisher’s method`_ it systematically overestimates the *p* value, i.e., you may falsely accept the null hypothesis (false negative).
 This module addresses this and thus you should consider it if:
 
 * At least one of the sub-tests is *discrete* with a low number of possible *p* values. What is a “low number” depends on the details, but 30 almost always is.
 * The combined *p* value returned by `combine_pvalues` is not very low already.
 
-Also see `comparison`, for a hands-on example, where only combining *p* values with accounting for the discreteness of tests yield the correct result.
+Also see `comparison` for a hands-on example, where only combining *p* values with accounting for the discreteness of tests yield the correct result.
 
 As a side product, this module also provides Monte Carlo-based **weighted** variants of Fisher’s, Pearson’s, Mudholkar’s and George’s and Edgington’s method, which `combine_pvalues` does not provide.
 
@@ -47,7 +47,7 @@ The most relevant **discrete tests** are:
 * the sign test,
 * the Mann-Whitney *U* test,
 * Wilcoxon’s signed rank test,
-* any test based on a ranked correlation such as Kendall’s *τ* and Spearman’s *ρ*,
+* any test based on a ranked correlation such as Kendall’s *τ* and Spearman’s *ρ*,
 * the Kruskal–Wallis test,
 * Fisher’s exact test and any other test for integer contingency tables.
 
@@ -93,6 +93,24 @@ An extensive example
 
 .. automodule:: comparison
 
+Implementing your own test
+--------------------------
+
+If you want to analyse a given dataset with a test that this module does not provide, you need to determine two things:
+
+* The *p* value of the test applied to your dataset.
+* A list of all possible *p* values that you test can yield for datasets with the same sample size(s).
+
+You can use these as arguments of `CTR`’s default constructor.
+
+The best way to find all possible *p* values is to get a rough understanding of the test statistics and look into an existing implementation of the test, so you don’t have to fully re-invent the wheel.
+
+Example Mann–Whitney *U* test
+`````````````````````````````
+
+.. automodule:: mwu
+
+
 What needs to be done
 ---------------------
 
@@ -101,15 +119,12 @@ This module is work in progress:
 * The core structures and two tests are finished.
 * Everything you *can* use is thoroughly tested.
 * So far, only the sign test and Mann–Whitney *U* test are supported.
-* An instruction for implementing your own tests is planned.
 
 Command reference
 -----------------
 
 .. automodule:: combine_pvalues_discrete
 	:members: CTR, combine, sign_test
-
-
 
 .. _combine_pvalues: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.combine_pvalues.html
 
