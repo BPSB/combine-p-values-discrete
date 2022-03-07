@@ -54,6 +54,9 @@ class CTR(object):
 		kwargs
 			Further keyword arguments to be passed on to SciPy’s `mannwhitneyu`, such as `alternative` or `axis`.
 		"""
+		if "alternative" not in kwargs:
+			raise ValueError("You must specify the alternative.")
+		
 		if kwargs["alternative"].lower() == "two-sided":
 			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
 		n,m = len(x),len(y)
