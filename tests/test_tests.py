@@ -107,7 +107,7 @@ def test_compare_with_surrogates(trend,test,sampling_method,rng):
 	test_and_combine,create_data,logp_sum = tests[test]
 	dataset = create_data(rng,10,trend=trend)
 	
-	p_from_combine = test_and_combine(dataset,RNG=rng)
+	p_from_combine = test_and_combine(dataset,method="fisher",RNG=rng)
 	
 	n = 1000
 	

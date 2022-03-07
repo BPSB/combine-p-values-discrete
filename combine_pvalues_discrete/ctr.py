@@ -121,7 +121,7 @@ statistics_with_inf = {"stouffer"}
 
 def combine(
 		ctrs, weights=None,
-		method="fisher",
+		method="mudholkar_george", alternative="less",
 		n_samples=10000000, sampling_method="proportional",
 		RNG=None,
 	):
@@ -135,13 +135,17 @@ def combine(
 	
 	method: string or function
 		One of "fisher", "pearson", "mudholkar_george", "stouffer", "tippett", "edgington", "simes", or a self-defined function.
-
+		
 		In the latter case, the function can have the following arguments (which must be named as given):
 		* A two-dimensional array `p` containing the p values.
 		* A two-dimensional array `q` containing their complements.
 		* A one-dimensional array `w` containing the weights.
 		The function must return the statistics computed along the zero-th axis.
 		For example for the weighted Mudholkar–George method, this function would be `lambda p,q,w:  w.dot(np.log(p/q))`.
+	
+	alternative: "less" or "two-sided"
+		Whether your combined null hypothesis is one- or two-sided.
+		Mind that this is not about the sidedness of the individual tests: Those should always be one-sided.
 	
 	weights: iterable of numbers
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
@@ -221,5 +225,12 @@ def combine(
 		orig_stat = statistic(**kwargs_orig)
 		null_stats = statistic(**kwargs_null)
 	
-	return counted_p( orig_stat, null_stats)
+	onesided_p = counted_p( orig_stat, null_stats)
+	
+	if alternative=="less":
+		return onesided_p
+	elif alternative=="two-sided":
+		return 2*onesided_p
+	else:
+		raise ValueError('Alternative must be "less" or "two-sided".')
 

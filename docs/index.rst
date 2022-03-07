@@ -22,7 +22,7 @@ This module addresses this and thus you should consider it if:
 
 Also see `comparison` for a hands-on example, where only combining *p* values with accounting for the discreteness of tests yield the correct result.
 
-As a side product, this module also provides Monte Carlo-based **weighted** variants of Fisher’s, Pearson’s, Mudholkar’s and George’s and Edgington’s method, which `combine_pvalues` does not provide.
+**Also,** as a side product, this module also implements Monte Carlo-based **weighted** variants of methods other than Stouffer’s, which `combine_pvalues` does not provide.
 
 Discrete and continuous tests
 `````````````````````````````
@@ -59,6 +59,7 @@ The most relevant **continuous tests** are:
 * the test for significance of Pearson’s *r*,
 * ANOVA.
 
+.. _complements:
 
 How this module works
 ---------------------
@@ -105,10 +106,37 @@ You can use these as arguments of `CTR`’s default constructor.
 
 The best way to find all possible *p* values is to get a rough understanding of the test statistics and look into an existing implementation of the test, so you don’t have to fully re-invent the wheel.
 
-Example Mann–Whitney *U* test
-`````````````````````````````
+Note that individual tests should always be one-sided for the following reason:
+If you have two equally significant, but opposing sub-results, they should not add in effect, but cancel each other.
+This is not possible when you use two-sided subtests, since all information on the directionality of a result gets lost.
+
+Example: Mann–Whitney *U* test
+``````````````````````````````
 
 .. automodule:: mwu
+
+
+Why is the default combining method Mudholkar’s and George’s?
+-----------------------------------------------------
+
+I assume here that you want to investigate the research hypothesis that all datasets are subject to the same trend.
+The trend may manifest more clearly in some of the datasets (and you don’t know which a priori), but it should not be inverted (other than by chance).
+In this case, you would perform one-sided subtests.
+(If you would consider both directions of trend a finding, the combination needs to be two-sided, not the subtests.)
+
+If the *p* value of such a subtest is small, the sub-dataset exhibits the trend you hypothesised.
+Conversely, if the complement *q ≈ 1−p* of a subtest is small, the sub-dataset exhibits a trend opposite to what you hypothesised – with a *p* value *q*.
+(See `complement` on how *q* is defined for the purposes of this module.)
+I think that the combined *p* values should reflect this, i.e., the complement *q* should indicate the significance of the opposite one-sided hypothesis (not the null hypothesis) just like the *p* value indicates the significance of the null hypothesis.
+
+To achieve this, the combining method must be treating *p* and *q* in a symmetrical fashion.
+This also means that the following results exactly negate each other:
+
+* a subtest with :math:`p=p_0`.
+* a subtest with :math:`q=p_0`, i.e., :math:`p≈1-p_0`.
+
+Only two methods fulfil this: the one by Mudholkar and George as well as the one by Stouffer.
+Since the latter’s statistics becomes infinite if :math:`p=1` for any subtest (and thus cannot distinguish between this happening for one or almost all tests), I prefer Mudholkar’s and George’s method.
 
 
 What needs to be done

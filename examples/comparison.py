@@ -57,6 +57,8 @@ Finally, by using this module, we can take into account the discreteness of test
 	:dedent: 1
 	:lines: 40-44
 
+(We here use Fisher’s method, since it simplifies the following demonstration. In general, I don’t recommend it.)
+
 Checking the Result
 ```````````````````
 
