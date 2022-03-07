@@ -14,10 +14,10 @@ def sample_discrete(values,frequencies,RNG=None,size=10000000,method="proportion
 	if method=="stochastic":
 		return RNG.choice( values, p=frequencies, size=size, replace=True )
 	elif method=="proportional":
-		result = np.empty(size)
-		start = 0
 		combos = list(zip(values,frequencies))
 		RNG.shuffle(combos)
+		result = np.empty(size)
+		start = 0
 		for p,prob in combos:
 			end = start + prob*size
 			result[ round(start) : round(end) ] = p
