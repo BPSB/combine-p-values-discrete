@@ -117,7 +117,7 @@ Example: Mann–Whitney *U* test
 
 
 Why is the default combining method Mudholkar’s and George’s?
------------------------------------------------------
+-------------------------------------------------------------
 
 I assume here that you want to investigate the research hypothesis that all datasets are subject to the same trend.
 The trend may manifest more clearly in some of the datasets (and you don’t know which a priori), but it should not be inverted (other than by chance).
@@ -126,7 +126,7 @@ In this case, you would perform one-sided subtests.
 
 If the *p* value of such a subtest is small, the sub-dataset exhibits the trend you hypothesised.
 Conversely, if the complement *q ≈ 1−p* of a subtest is small, the sub-dataset exhibits a trend opposite to what you hypothesised – with a *p* value *q*.
-(See `complement` on how *q* is defined for the purposes of this module.)
+(See `complements` on how *q* is defined for the purposes of this module.)
 I think that the combined *p* values should reflect this, i.e., the complement *q* should indicate the significance of the opposite one-sided hypothesis (not the null hypothesis) just like the *p* value indicates the significance of the null hypothesis.
 
 To achieve this, the combining method must be treating *p* and *q* in a symmetrical fashion.
