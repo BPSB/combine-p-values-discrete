@@ -22,6 +22,8 @@ This module addresses this and thus you should consider it if:
 
 Also see `comparison`, for a hands-on example, where only combining *p* values with accounting for the discreteness of tests yield the correct result.
 
+As a side product, this module also provides Monte Carlo-based **weighted** variants of Fisher’s, Pearson’s, Mudholkar’s and George’s and Edgington’s method, which `combine_pvalues` does not provide.
+
 Discrete and continuous tests
 `````````````````````````````
 
