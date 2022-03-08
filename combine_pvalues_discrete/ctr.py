@@ -96,7 +96,7 @@ class CTR(object):
 	def spearmanr( cls, x, y, alternative="greater", n_thresh=9 ):
 		"""
 		Creates an object representing the result of a single Spearman’s ρ test.
-		If the size of arrays n! is smaller than n_thresh, p values are exactly determined using a permutation test. Otherwise p values are computed using SciPy’s `spearmanr`, but with an imposed lower limit of n!.
+		If the size of arrays n! is smaller than n_thresh, p values are exactly determined using a permutation test. Otherwise p values are computed using SciPy’s `spearmanr`, but with an imposed lower limit of n! and a uniform distribution of p values is assumed.
 		
 		Parameters
 		----------
