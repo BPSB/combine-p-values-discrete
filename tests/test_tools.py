@@ -6,7 +6,7 @@ from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 
 from combine_pvalues_discrete.tools import (
 		is_empty,
-		searchsorted_closest,
+		searchsorted_closest, unify_sorted,
 		sign_test,
 		counted_p, std_from_true_p,
 		assert_matching_p_values, assert_discrete_uniform,
@@ -36,6 +36,13 @@ def test_searchsorted_closest():
 
 def test_searchsorted_closest_single_input():
 	assert searchsorted_closest([1,2,3],2.1) == 1
+
+def test_unify_sorted():
+	array  = np.array([ 1, 2, 2.1, 2.1, 3, 3.1, 3.2, 3.2, 4 ])
+	output = np.array([ 1, 2, 2  , 2  , 3, 3  , 3  , 3  , 4 ])
+	
+	unify_sorted(array,eps=0.3)
+	np.testing.assert_equal( array, output )
 
 @mark.parametrize("n",range(1,20))
 def test_signtest_with_statsmodels(n):

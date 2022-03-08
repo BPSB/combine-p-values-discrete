@@ -4,7 +4,7 @@ import numpy as np
 from warnings import warn
 from itertools import permutations
 
-from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest
+from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, unify_sorted
 from .pdist import PDist
 
 from scipy.special import erfinv
@@ -123,12 +123,7 @@ class CTR(object):
 		orig_ρ = pearsonr(x_r,y_r)[0]
 		
 		# Unify ρ values that are only different due to numerical noise:
-		EPS = 1e-14
-		def find_similar(x):
-			diff = np.diff(x)
-			return np.logical_and( 0<diff, diff<EPS )
-		while np.any( similar:= find_similar(possible_ρs) ):
-			possible_ρs[1:][similar] = possible_ρs[:-1][similar]
+		unify_sorted(possible_ρs)
 		orig_ρ = possible_ρs[ searchsorted_closest(possible_ρs,orig_ρ) ]
 		
 		if alternative == "greater":

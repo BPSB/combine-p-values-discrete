@@ -21,6 +21,21 @@ def searchsorted_closest(array,values):
 	left_or_right = values-array[left_idcs] < array[right_idcs]-values
 	return np.choose( left_or_right, (right_idcs,left_idcs) )
 
+def find_similar(array,eps):
+	"""
+	Returns mask of which pairs of neighbours in an array are closer than eps.
+	"""
+	diff = np.diff(array)
+	return np.logical_and( 0<diff, diff<eps )
+
+def unify_sorted(array,eps=1e-14):
+	"""
+	Unify values in a sorted array that only differ from their predecessor by eps – in place.
+	"""
+	while np.any( similar:= find_similar(array,eps) ):
+		array[1:][similar] = array[:-1][similar]
+
+
 SignTestResult = namedtuple("SignTestResult",("pvalue","not_tied","statistic"))
 
 def sign_test(x,y=0,alternative="less"):
