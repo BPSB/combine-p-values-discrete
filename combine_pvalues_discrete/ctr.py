@@ -2,13 +2,15 @@ import math
 from inspect import signature
 import numpy as np
 from warnings import warn
+from itertools import permutations
 
-from .tools import sign_test, counted_p, Combined_P_Value, is_empty
+from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest
 from .pdist import PDist
 
 from scipy.special import erfinv
-from scipy.stats import rankdata
+from scipy.stats import rankdata, spearmanr, pearsonr
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
+from scipy.stats._stats_py import _ttest_finish
 
 class CTR(object):
 	"""
@@ -52,7 +54,7 @@ class CTR(object):
 			The two arrays of samples to compare.
 		
 		kwargs
-			Further keyword arguments to be passed on to SciPy’s `mannwhitneyu`, such as `alternative` or `axis`.
+			Further keyword arguments to be passed on to SciPy’s `mannwhitneyu`, such as `alternative`.
 		"""
 		if "alternative" not in kwargs:
 			raise ValueError("You must specify the alternative.")
@@ -90,11 +92,65 @@ class CTR(object):
 		all_ps = list( np.cumsum([math.comb(m,i)/2**m for i in range(m)]) ) + [1]
 		return cls( p, all_ps )
 	
+	@classmethod
+	def spearmanr( cls, x, y, alternative="greater", n_thresh=9 ):
+		"""
+		Creates an object representing the result of a single Spearman’s ρ test.
+		If the size of arrays n! is smaller than n_thresh, p values are exactly determined using a permutation test. Otherwise p values are computed using SciPy’s `spearmanr`, but with an imposed lower limit of n!.
+		
+		Parameters
+		----------
+		x,y
+			The two arrays of samples to correlate.
+		
+		alternative: "greater" or "less"
+		
+		n_thresh:
+			Threshold under which a permutation test is used.
+		"""
+		if len(x)>n_thresh:
+			p = spearmanr(x,y,alternative=alternative)
+			p = np.clip( p, 1/factorial(len(x)), 1 )
+			return cls(p)
+		
+		x_r,y_r = rankdata(x),rankdata(y)
+		
+		possible_ρs = np.sort([
+				pearsonr(x_r,y_permut)[0]
+				for y_permut in permutations(y_r)
+			])
+		
+		orig_ρ = pearsonr(x_r,y_r)[0]
+		
+		# Unify ρ values that are only different due to numerical noise:
+		EPS = 1e-14
+		def find_similar(x):
+			diff = np.diff(x)
+			return np.logical_and( 0<diff, diff<EPS )
+		while np.any( similar:= find_similar(possible_ρs) ):
+			possible_ρs[1:][similar] = possible_ρs[:-1][similar]
+		orig_ρ = possible_ρs[ searchsorted_closest(possible_ρs,orig_ρ) ]
+		
+		if alternative == "greater":
+			possible_ρs = np.flip(possible_ρs)
+		elif alternative != "less":
+			raise ValueError('Alternative must be "less" or "greater". (A two-sided test is not supported and makes little sense for combining test results.)')
+		
+		k = len(possible_ρs)
+		# uses the last of duplicate ρs by updating dictionary in the right order:
+		ρ_to_p = dict( zip( possible_ρs, np.linspace(1/k,1,k) ) )
+		
+		orig_p = ρ_to_p[orig_ρ]
+		return cls( orig_p, list(ρ_to_p.values()) )
+	
 	def __repr__(self):
 		return f"CombinableTest(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"
 	
 	def __eq__(self,other):
-		return self.p==other.p and self.nulldist==other.nulldist
+		return self.approx(other,tol=0)
+	
+	def approx(self,other,tol=1e-14):
+		return abs(self.p-other.p)<=tol and self.nulldist.approx(other.nulldist,tol)
 
 combining_statistics = {
 	("fisher"          ,"normal"  ): lambda p:  np.sum( np.log(p)     , axis=0 ),

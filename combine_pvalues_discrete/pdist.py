@@ -91,10 +91,13 @@ class PDist(object):
 			return f"PDist( {points} )"
 	
 	def __eq__(self,other):
+		return self.approx(other,tol=0)
+	
+	def approx(self,other,tol=1e-14):
 		if self.continuous:
 			return other.continuous
 		else:
-			return all( p1==p2 for p1,p2 in zip(self,other) )
+			return all( abs(p1-p2)<=tol for p1,p2 in zip(self,other) )
 	
 	def sample(self,**kwargs):
 		"""

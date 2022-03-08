@@ -1,8 +1,8 @@
 from pytest import mark, raises
 from itertools import count
 import numpy as np
-from scipy.stats import mannwhitneyu
-from math import prod
+from scipy.stats import mannwhitneyu, spearmanr
+import math
 
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
 from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values, assert_discrete_uniform
@@ -24,6 +24,64 @@ def test_simple_signtest():
 		==
 		CTR( 0.5, [0.5,1.0] )
 	)
+
+@mark.parametrize(
+		"  x    ,    y   ,    alt   ,   p  ,      all_ps         ",
+	[
+		([1,3,2], [4,5,0], "less"   ,  5/6 , [ 1/6, 1/2, 5/6, 1 ]),
+		([1,3,2], [4,5,0], "greater",  1/2 , [ 1/6, 1/2, 5/6, 1 ]),
+		([1,2,2], [3,3,5], "less"   ,   1  , [ 1/3,           1 ]),
+		([1,2,2], [3,3,5], "greater",  2/3 , [ 2/3,           1 ]),
+	])
+def test_simple_spearman(x,y,alt,p,all_ps):
+	assert CTR.spearmanr( x, y, alternative=alt ).approx( CTR(p,all_ps) )
+
+@mark.parametrize("n",range(2,9))
+def test_spearman_nulldist_length(n):
+	assert (
+		len( CTR.spearmanr(range(n),range(n)).nulldist.ps )
+		==
+		math.comb(n+1,3) + (n!=3) # OEIS A126972
+	)
+
+def spearman_data(RNG,n,trend=0):
+	x,y = RNG.normal(size=(2,n))
+	y = (1-trend)*y + trend*x
+	return x,y
+
+@mark.parametrize("alt",["less","greater"])
+@mark.parametrize("n",range(3,7))
+def test_spearman_null(n,alt,rng):
+	m = 1000 if n<5 else 100
+	p_values = [
+			CTR.spearmanr(
+				*spearman_data(RNG=rng,n=n),
+				alternative = alt
+			).p
+			for _ in range(m)
+		]
+	
+	assert_discrete_uniform(p_values,factor=3.2)
+
+@mark.parametrize("n",range(3,9))
+def test_spearman(n,rng):
+	m = 10000
+	
+	x,y = spearman_data(RNG=rng,n=n,trend=0.8)
+	orig_ρ = spearmanr(x,y).correlation
+
+	null_ρs = np.array([
+			spearmanr(*spearman_data(RNG=rng,n=n)).correlation
+			for _ in range(m)
+		])
+	
+	assert_matching_p_values(
+			np.average( orig_ρ <= null_ρs ),
+			CTR.spearmanr(x,y,alternative="greater").p,
+			n = m,
+			factor=3,
+		)
+
 
 def mwu_combine( data, **kwargs ):
 	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]

@@ -45,7 +45,7 @@ Moreover, they contain tests of bound integer data.
 The most relevant **discrete tests** are:
 
 * the sign test,
-* the Mann-Whitney *U* test,
+* the Mann–Whitney *U* test,
 * Wilcoxon’s signed rank test,
 * any test based on a ranked correlation such as Kendall’s *τ* and Spearman’s *ρ*,
 * the Kruskal–Wallis test,
@@ -146,7 +146,7 @@ This module is work in progress:
 
 * The core structures and two tests are finished.
 * Everything you *can* use is thoroughly tested.
-* So far, only the sign test and Mann–Whitney *U* test are supported.
+* So far, only the sign test, Mann–Whitney *U* test, and Spearman’s ρ are supported.
 
 Command reference
 -----------------
