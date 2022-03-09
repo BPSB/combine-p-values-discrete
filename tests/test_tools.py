@@ -7,6 +7,7 @@ from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 from combine_pvalues_discrete.tools import (
 		is_empty,
 		searchsorted_closest, unify_sorted,
+		has_ties,
 		sign_test,
 		counted_p, std_from_true_p,
 		assert_matching_p_values, assert_discrete_uniform,
@@ -43,6 +44,14 @@ def test_unify_sorted():
 	
 	unify_sorted(array,eps=0.3)
 	np.testing.assert_equal( array, output )
+
+@mark.parametrize(
+		" argument     , result",[
+		( [0,4,1,3,2], False ),
+		( [0,1,3,4,1], True  ),
+	])
+def test_has_ties(argument,result):
+	assert has_ties(argument) == result
 
 @mark.parametrize("n",range(1,20))
 def test_signtest_with_statsmodels(n):

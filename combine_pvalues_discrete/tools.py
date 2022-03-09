@@ -35,6 +35,11 @@ def unify_sorted(array,eps=1e-14):
 	while np.any( similar:= find_similar(array,eps) ):
 		array[1:][similar] = array[:-1][similar]
 
+def has_ties(array):
+	"""
+	Whether any two values in the array are identical (tied).
+	"""
+	return np.any(np.diff(sorted(array))==0)
 
 SignTestResult = namedtuple("SignTestResult",("pvalue","not_tied","statistic"))
 
