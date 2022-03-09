@@ -1,7 +1,7 @@
 from pytest import mark, raises
 from itertools import count
 import numpy as np
-from scipy.stats import mannwhitneyu, spearmanr
+from scipy.stats import mannwhitneyu, spearmanr, kendalltau
 import math
 
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
@@ -83,13 +83,16 @@ def test_spearman(n,rng):
 		)
 
 @mark.parametrize(
-		"  x    ,    y   ,    alt   ,   p  ,      all_ps         ",
+		"    x    ,     y    ,    alt   ,    p   ,                all_ps                 ",
 	[
 		([1,3,2,4], [4,5,0,6], "less"   ,  23/24 , [ 1/24, 1/6, 3/8, 5/8, 5/6, 23/24, 1 ]),
 		([1,3,2,4], [4,5,0,6], "greater",   1/6  , [ 1/24, 1/6, 3/8, 5/8, 5/6, 23/24, 1 ]),
 	])
 def test_simple_kendall(x,y,alt,p,all_ps):
-	assert CTR.kendalltau( x, y, alternative=alt ).approx( CTR(p,all_ps) )
+	result = CTR.kendalltau( x, y, alternative=alt )
+	control_p = kendalltau(x,y,alternative=alt).pvalue
+	assert result.approx( CTR(p,all_ps) )
+	assert np.isclose( result.p, control_p )
 
 def mwu_combine( data, **kwargs ):
 	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]
