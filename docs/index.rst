@@ -146,7 +146,7 @@ This module is work in progress:
 
 * The core structures and two tests are finished.
 * Everything you *can* use is thoroughly tested.
-* So far, only the sign test, Mann–Whitney *U* test, and Spearman’s ρ are supported.
+* So far, only the sign test, Mann–Whitney *U* test, Spearman’s ρ, and Kendall’s τ are supported.
 
 Command reference
 -----------------

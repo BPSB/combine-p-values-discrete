@@ -4,13 +4,14 @@ import numpy as np
 from warnings import warn
 from itertools import permutations
 
-from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, unify_sorted
+from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, unify_sorted, has_ties
 from .pdist import PDist
 
 from scipy.special import erfinv
-from scipy.stats import rankdata, spearmanr, pearsonr
+from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
 from scipy.stats._stats_py import _ttest_finish
+from scipy.stats._mstats_basic import _kendall_p_exact
 
 class CTR(object):
 	"""
@@ -58,6 +59,9 @@ class CTR(object):
 		"""
 		if "alternative" not in kwargs:
 			raise ValueError("You must specify the alternative.")
+		
+		if has_ties(np.hstack((x,y))):
+			raise NotImplementedError("Ties are not yet implemented.")
 		
 		if kwargs["alternative"].lower() == "two-sided":
 			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
@@ -137,6 +141,38 @@ class CTR(object):
 		
 		orig_p = ρ_to_p[orig_ρ]
 		return cls( orig_p, list(ρ_to_p.values()) )
+	
+	@classmethod
+	def kendalltau( cls, x, y, **kwargs ):
+		"""
+		Creates an object representing the result of a single Kendall’s τ test using SciPy’s `kendalltau` to compute p values.
+		
+		NaNs and ties are not supported.
+		
+		Parameters
+		----------
+		x,y
+			The two arrays of samples to correlate.
+		
+		alternative: "greater" or "less"
+		"""
+
+		if "alternative" == "two-sided":
+			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
+		
+		if has_ties(x) or has_ties(y):
+			raise NotImplementedError("Ties are not yet implemented.")
+		
+		p = kendalltau(x,y,**kwargs).pvalue
+		n = len(x)
+		tot = math.comb(n,2)
+		
+		possible_ps = [
+			_kendall_p_exact(n,dis,"greater")
+			for dis in range(0,math.comb(n,2)+1)
+		]
+		
+		return cls(p,possible_ps)
 	
 	def __repr__(self):
 		return f"CombinableTest(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"

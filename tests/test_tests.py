@@ -82,6 +82,14 @@ def test_spearman(n,rng):
 			factor=3,
 		)
 
+@mark.parametrize(
+		"  x    ,    y   ,    alt   ,   p  ,      all_ps         ",
+	[
+		([1,3,2,4], [4,5,0,6], "less"   ,  23/24 , [ 1/24, 1/6, 3/8, 5/8, 5/6, 23/24, 1 ]),
+		([1,3,2,4], [4,5,0,6], "greater",   1/6  , [ 1/24, 1/6, 3/8, 5/8, 5/6, 23/24, 1 ]),
+	])
+def test_simple_kendall(x,y,alt,p,all_ps):
+	assert CTR.kendalltau( x, y, alternative=alt ).approx( CTR(p,all_ps) )
 
 def mwu_combine( data, **kwargs ):
 	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]
