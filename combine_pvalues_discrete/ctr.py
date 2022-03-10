@@ -14,6 +14,10 @@ from scipy.stats._stats_py import _ttest_finish
 from scipy.stats._mstats_basic import _kendall_p_exact
 from scipy.stats.distributions import hypergeom
 
+def assert_one_sided(alternative):
+	if alternative.lower() == "two-sided":
+		raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
+
 class CTR(object):
 	"""
 	CTR = combinable test result
@@ -69,12 +73,11 @@ class CTR(object):
 		"""
 		if "alternative" not in kwargs:
 			raise ValueError("You must specify the alternative.")
+		assert_one_sided(kwargs["alternative"])
 		
 		if has_ties(np.hstack((x,y))):
 			raise NotImplementedError("Ties are not yet implemented.")
 		
-		if kwargs["alternative"].lower() == "two-sided":
-			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
 		n,m = len(x),len(y)
 		
 		if kwargs.pop("method","exact") != "exact":
@@ -98,8 +101,7 @@ class CTR(object):
 			The two-sided test is not supported because it makes little sense in a combination scenario.
 		"""
 		
-		if alternative == "two-sided":
-			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
+		assert_one_sided(alternative)
 		
 		p,m,_ = sign_test(x,y,alternative)
 		
@@ -167,9 +169,8 @@ class CTR(object):
 		
 		alternative: "greater" or "less"
 		"""
-
-		if kwargs["alternative"] == "two-sided":
-			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
+		
+		assert_one_sided(kwargs["alternative"])
 		
 		if has_ties(x) or has_ties(y):
 			raise NotImplementedError("Ties are not yet implemented.")
@@ -198,12 +199,8 @@ class CTR(object):
 		alternative: "less" or "greater"
 		"""
 		
-		if alternative == "two-sided":
-			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
-		elif alternative=="less":
-			C = np.array(C)
-		elif alternative=="greater":
-			C = np.fliplr(C)
+		assert_one_sided(alternative)
+		C = np.fliplr(C) if alternative=="greater" else np.array(C)
 		
 		p = fisher_exact(C,alternative="less")[1]
 		
