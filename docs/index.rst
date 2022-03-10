@@ -144,9 +144,9 @@ What needs to be done
 
 This module is work in progress:
 
-* The core structures and two tests are finished.
-* Everything you *can* use is thoroughly tested.
-* So far, only the sign test, Mann–Whitney *U* test, Spearman’s ρ, and Kendall’s τ are supported.
+* The combining methods and five tests are finished.
+* Everything you can use is thoroughly tested.
+* So far, only the sign test, Mann–Whitney *U* test, Fisher’s exact test, Spearman’s ρ, and Kendall’s τ are supported.
 
 Command reference
 -----------------

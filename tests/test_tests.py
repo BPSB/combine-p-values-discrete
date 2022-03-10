@@ -1,7 +1,7 @@
 from pytest import mark, raises
 from itertools import count
 import numpy as np
-from scipy.stats import mannwhitneyu, spearmanr, kendalltau
+from scipy.stats import mannwhitneyu, spearmanr, kendalltau, fisher_exact
 import math
 
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
@@ -105,6 +105,22 @@ def test_simple_kendall(x,y,alt,p,all_ps):
 	control_p = kendalltau(x,y,alternative=alt).pvalue
 	assert result.approx( CTR(p,all_ps) )
 	assert np.isclose( result.p, control_p )
+
+@mark.parametrize(
+		"      C      ,   alt    ,    p    ,            all_ps            ",
+	[
+		([[2,3],[4,0]], "less"   ,   5/42  , [  5/42 , 25/42 ,  20/21 , 1 ]),
+		([[2,3],[4,0]], "greater",    1    , [  1/21 , 17/42 ,  37/42 , 1 ]),
+		([[1,7],[2,7]], "less"   ,  93/170 , [ 21/170, 93/170,  78/85 , 1 ]),
+		([[1,7],[2,7]], "greater", 149/170 , [  7/85 , 77/170, 149/170, 1 ]),
+	])
+def test_simple_fisher_exact(C,alt,p,all_ps):
+	result = CTR.fisher_exact( C, alternative=alt )
+	control_p = fisher_exact(C,alternative=alt)[1]
+	assert result.approx( CTR(p,all_ps) )
+	assert np.isclose( result.p, control_p )
+
+# -----------------
 
 def mwu_combine( data, **kwargs ):
 	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]

@@ -8,10 +8,11 @@ from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorte
 from .pdist import PDist
 
 from scipy.special import erfinv, factorial
-from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau
+from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
 from scipy.stats._stats_py import _ttest_finish
 from scipy.stats._mstats_basic import _kendall_p_exact
+from scipy.stats.distributions import hypergeom
 
 class CTR(object):
 	"""
@@ -97,7 +98,7 @@ class CTR(object):
 			The two-sided test is not supported because it makes little sense in a combination scenario.
 		"""
 		
-		if "alternative" == "two-sided":
+		if alternative == "two-sided":
 			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
 		
 		p,m,_ = sign_test(x,y,alternative)
@@ -167,7 +168,7 @@ class CTR(object):
 		alternative: "greater" or "less"
 		"""
 
-		if "alternative" == "two-sided":
+		if kwargs["alternative"] == "two-sided":
 			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
 		
 		if has_ties(x) or has_ties(y):
@@ -183,6 +184,39 @@ class CTR(object):
 		]
 		
 		return cls(p,possible_ps)
+	
+	@classmethod
+	def fisher_exact( cls, C, alternative="less" ):
+		"""
+		Creates an object representing the result of Fisher’s exact test for a single contingency table C. This is unrelated to Fisher’s method of combining p values.
+		
+		Parameters
+		----------
+		C
+			The contingency table.
+		
+		alternative: "less" or "greater"
+		"""
+		
+		if alternative == "two-sided":
+			raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
+		elif alternative=="less":
+			C = np.array(C)
+		elif alternative=="greater":
+			C = np.fliplr(C)
+		
+		p = fisher_exact(C,alternative="less")[1]
+		
+		n1,n2 = np.sum(C,axis=1)
+		n ,_  = np.sum(C,axis=0)
+		
+		possible_ps = [
+				hypergeom.cdf( x, n1+n2, n1, n )
+				for x in range( max(0,n-n2), min(n,n1)+1 )
+			]
+		
+		return cls( p, possible_ps )
+
 
 combining_statistics = {
 	("fisher"          ,"normal"  ): lambda p:  np.sum( np.log(p)     , axis=0 ),
