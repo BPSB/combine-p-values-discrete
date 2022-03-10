@@ -41,6 +41,15 @@ class CTR(object):
 		self.nulldist = PDist(all_ps)
 		self.q = self.nulldist.complement(self.p)
 	
+	def __repr__(self):
+		return f"CombinableTest(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"
+	
+	def __eq__(self,other):
+		return self.approx(other,tol=0)
+	
+	def approx(self,other,tol=1e-14):
+		return abs(self.p-other.p)<=tol and self.nulldist.approx(other.nulldist,tol)
+	
 	@classmethod
 	def mann_whitney_u( cls, x, y, **kwargs ):
 		"""
@@ -119,7 +128,7 @@ class CTR(object):
 			p = np.clip( p, 1/factorial(n), 1 )
 			return cls(p)
 		
-		# Working with n³·cov(2x,2y) because it is integer. As a statistics, it is equivalent to Spearman’s ρ.
+		# Working with n³·cov(2R(x),2R(y)) because it is integer. As a statistics, it is equivalent to Spearman’s ρ.
 		x_r = np.fix(2*rankdata(x)).astype(int)
 		y_r = np.fix(2*rankdata(y)).astype(int)
 		x_normed = n*x_r - np.sum(x_r)
@@ -174,15 +183,6 @@ class CTR(object):
 		]
 		
 		return cls(p,possible_ps)
-	
-	def __repr__(self):
-		return f"CombinableTest(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"
-	
-	def __eq__(self,other):
-		return self.approx(other,tol=0)
-	
-	def approx(self,other,tol=1e-14):
-		return abs(self.p-other.p)<=tol and self.nulldist.approx(other.nulldist,tol)
 
 combining_statistics = {
 	("fisher"          ,"normal"  ): lambda p:  np.sum( np.log(p)     , axis=0 ),
