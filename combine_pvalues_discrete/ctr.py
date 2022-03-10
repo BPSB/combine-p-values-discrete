@@ -7,7 +7,7 @@ from itertools import permutations
 from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, unify_sorted, has_ties
 from .pdist import PDist
 
-from scipy.special import erfinv
+from scipy.special import erfinv, factorial
 from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
 from scipy.stats._stats_py import _ttest_finish
@@ -112,35 +112,36 @@ class CTR(object):
 		n_thresh:
 			Threshold under which a permutation test is used.
 		"""
-		if len(x)>n_thresh:
-			p = spearmanr(x,y,alternative=alternative)
-			p = np.clip( p, 1/factorial(len(x)), 1 )
+		n = len(x)
+		
+		if n>n_thresh:
+			p = spearmanr(x,y,alternative=alternative).pvalue
+			p = np.clip( p, 1/factorial(n), 1 )
 			return cls(p)
 		
-		x_r,y_r = rankdata(x),rankdata(y)
+		# Working with n³·cov(2x,2y) because it is integer. As a statistics, it is equivalent to Spearman’s ρ.
+		x_r = np.fix(2*rankdata(x)).astype(int)
+		y_r = np.fix(2*rankdata(y)).astype(int)
+		x_normed = n*x_r - np.sum(x_r)
+		y_normed = n*y_r - np.sum(y_r)
 		
-		possible_ρs = np.sort([
-				pearsonr(x_r,y_permut)[0]
-				for y_permut in permutations(y_r)
+		orig_cov = np.sum(x_normed*y_normed)
+		possible_covs = np.sort([
+				np.sum(x_normed*y_permut)
+				for y_permut in permutations(y_normed)
 			])
 		
-		orig_ρ = pearsonr(x_r,y_r)[0]
-		
-		# Unify ρ values that are only different due to numerical noise:
-		unify_sorted(possible_ρs)
-		orig_ρ = possible_ρs[ searchsorted_closest(possible_ρs,orig_ρ) ]
-		
 		if alternative == "greater":
-			possible_ρs = np.flip(possible_ρs)
+			possible_covs = np.flip(possible_covs)
 		elif alternative != "less":
 			raise ValueError('Alternative must be "less" or "greater". (A two-sided test is not supported and makes little sense for combining test results.)')
 		
-		k = len(possible_ρs)
-		# uses the last of duplicate ρs by updating dictionary in the right order:
-		ρ_to_p = dict( zip( possible_ρs, np.linspace(1/k,1,k) ) )
+		k = len(possible_covs)
+		# Using the last of duplicate covs by updating dictionary in the right order:
+		cov_to_p = dict( zip( possible_covs, np.linspace(1/k,1,k) ) )
 		
-		orig_p = ρ_to_p[orig_ρ]
-		return cls( orig_p, list(ρ_to_p.values()) )
+		orig_p = cov_to_p[orig_cov]
+		return cls( orig_p, list(cov_to_p.values()) )
 	
 	@classmethod
 	def kendalltau( cls, x, y, **kwargs ):
