@@ -36,6 +36,18 @@ def test_simple_signtest():
 def test_simple_spearman(x,y,alt,p,all_ps):
 	assert CTR.spearmanr( x, y, alternative=alt ).approx( CTR(p,all_ps) )
 
+@mark.parametrize("alt",["less","greater"])
+def test_spearman_large_dataset(rng,alt):
+	x,y = rng.normal(size=(2,100))
+	ctr = CTR.spearmanr(x,y,alternative=alt)
+	assert ctr.p == spearmanr(x,y,alternative=alt).pvalue
+	assert ctr.nulldist.continuous
+
+def test_spearman_large_perfect_dataset():
+	n = 100
+	ctr = CTR.spearmanr(range(n),range(n),alternative="greater")
+	assert ctr.p >= 1/math.factorial(n)
+
 @mark.parametrize("n",range(2,9))
 def test_spearman_nulldist_length(n):
 	assert (
@@ -65,7 +77,7 @@ def test_spearman_null(n,alt,rng):
 
 @mark.parametrize("n",range(3,9))
 def test_spearman(n,rng):
-	m = 10000
+	m = 1000
 	
 	x,y = spearman_data(RNG=rng,n=n,trend=0.8)
 	orig_ρ = spearmanr(x,y).correlation
