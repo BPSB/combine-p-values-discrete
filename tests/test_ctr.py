@@ -63,13 +63,25 @@ def test_combine_single(example):
 # Reproducing a sign test by combining single comparisons:
 
 @mark.parametrize( "n,replicate", product( range(2,15), range(20) ) )
-def test_comparison_to_sign_test(n,replicate,rng):
+@mark.parametrize(
+		"     method,            tol , n_samples",
+		[
+			("fisher"          ,  0  , n_samples),
+			("mudholkar_george",5e-16, 10000    ),
+		] )
+def test_comparison_to_sign_test(n,replicate,method,tol,n_samples,rng):
 	def my_sign_test_onesided(X,Y):
 		ctrs = [
 				CTR( 0.5 if x<y else 1, [0.5,1.0] )
 				for x,y in zip(X,Y)
 			]
-		return combine(ctrs,n_samples=n_samples,RNG=rng,method="fisher").pvalue
+		return combine(
+				ctrs,
+				n_samples = n_samples,
+				atol = tol,
+				method = method,
+				RNG = rng,
+			).pvalue
 	
 	X = rng.random(n)
 	Y = rng.random(n)
@@ -233,5 +245,4 @@ def test_identical_weights(method,sampling_method,alt,rng):
 		for w in [weights,None]
 	]
 	assert_matching_p_values(*results,n=n_samples,factor=4,compare=True)
-
 

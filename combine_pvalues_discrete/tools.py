@@ -21,20 +21,6 @@ def searchsorted_closest(array,values):
 	left_or_right = values-array[left_idcs] < array[right_idcs]-values
 	return np.choose( left_or_right, (right_idcs,left_idcs) )
 
-def find_similar(array,eps):
-	"""
-	Returns mask of which pairs of neighbours in an array are closer than eps.
-	"""
-	diff = np.diff(array)
-	return np.logical_and( 0<diff, diff<eps )
-
-def unify_sorted(array,eps=1e-14):
-	"""
-	Unify values in a sorted array that only differ from their predecessor by eps – in place.
-	"""
-	while np.any( similar:= find_similar(array,eps) ):
-		array[1:][similar] = array[:-1][similar]
-
 def has_ties(array):
 	"""
 	Whether any two values in the array are identical (tied).
@@ -67,20 +53,27 @@ def sign_test(x,y=0,alternative="less"):
 			greater,
 		)
 
+def less_or_close(x,y,atol=0,rtol=0):
+	"Whether y is `alt` than x or close with rtol."
+	
+	comparison = (y<=x)
+	
+	if atol or rtol:
+		closeness = np.isclose(x,y,atol=atol,rtol=rtol)
+		return np.logical_or( comparison, closeness )
+	else:
+		return comparison
+
 Combined_P_Value = namedtuple("Combined_P_Value",("pvalue","std"))
 
-def counted_p(orig_stat,null_stats,alternative="less"):
+def counted_p(orig_stat,null_stats,**tols):
 	"""
-	Estimates the p value of a statistic (`orig_stat`) by comparing with the statistic for samples of a null model (`null_stats`). Returns the p value and its (estimated) standard deviation when sampling with this method.
+	Estimates the p value of a statistic (`orig_stat`) by comparing with the statistic for samples of a null model (`null_stats`), with a small statistic being extreme. Returns the p value and its (estimated) standard deviation when sampling with this method.
 	"""
+	
 	null_stats = np.asarray(null_stats)
 	size = null_stats.shape[0]
-	if alternative=="less":
-		count = np.sum( orig_stat>=null_stats, axis=0 )
-	elif alternative=="greater":
-		count = np.sum( orig_stat<=null_stats, axis=0 )
-	else:
-		raise ValueError('Alternative must be "less" or "greater".')
+	count = np.sum( less_or_close(orig_stat,null_stats,**tols), axis=0 )
 		
 	p = (count+1)/(size+1)
 	std = np.maximum(

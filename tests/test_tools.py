@@ -6,7 +6,7 @@ from statsmodels.stats.descriptivestats import sign_test as sm_sign_test
 
 from combine_pvalues_discrete.tools import (
 		is_empty,
-		searchsorted_closest, unify_sorted,
+		searchsorted_closest,
 		has_ties,
 		sign_test,
 		counted_p, std_from_true_p,
@@ -37,13 +37,6 @@ def test_searchsorted_closest():
 
 def test_searchsorted_closest_single_input():
 	assert searchsorted_closest([1,2,3],2.1) == 1
-
-def test_unify_sorted():
-	array  = np.array([ 1, 2, 2.1, 2.1, 3, 3.1, 3.2, 3.2, 4 ])
-	output = np.array([ 1, 2, 2  , 2  , 3, 3  , 3  , 3  , 4 ])
-	
-	unify_sorted(array,eps=0.3)
-	np.testing.assert_equal( array, output )
 
 @mark.parametrize(
 		" argument     , result",[
@@ -96,21 +89,16 @@ def test_counted_p():
 	assert counted_p(0.5,null_stats).pvalue == 0.1
 	assert counted_p(3.5,null_stats).pvalue == 0.4
 	assert counted_p(10 ,null_stats).pvalue == 1.0
-	assert counted_p(0.5,null_stats,alternative="greater").pvalue == 1.0
-	assert counted_p(3.5,null_stats,alternative="greater").pvalue == 0.7
-	assert counted_p(10 ,null_stats,alternative="greater").pvalue == 0.1
 
-@mark.parametrize("alt",["less","greater"])
-def test_std_counted_p(rng,alt):
+def test_std_counted_p(rng):
 	n = 1000  # number of points per dataset
 	m = 10000 # number of datasets
 	k = 30    # number of different p values tested
 	nulls = rng.uniform(0,1,size=(n,m))
 	true_ps = np.logspace(-2,0,k)
 	estimated_ps,estimated_stds = counted_p(
-			true_ps[None,None,:] if alt=="less" else 1-true_ps[None,None,:],
+			true_ps[None,None,:],
 			nulls[:,:,None],
-			alternative=alt
 		)
 	assert estimated_ps.shape == (m,k)
 	stds = std_from_true_p(true_ps,n)

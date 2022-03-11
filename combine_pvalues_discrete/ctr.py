@@ -4,7 +4,7 @@ import numpy as np
 from warnings import warn
 from itertools import permutations
 
-from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, unify_sorted, has_ties
+from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, has_ties
 from .pdist import PDist
 
 from scipy.special import erfinv, factorial
@@ -265,10 +265,11 @@ def combine(
 		ctrs, weights=None,
 		method="mudholkar_george", alternative="less",
 		n_samples=10000000, sampling_method="proportional",
+		rtol=0, atol=0,
 		RNG=None,
 	):
 	"""
-	Estimates the combined p value of combinable test results. Usually, this result is why you are doing all this.
+	Estimates the combined p value of combinable test results. Usually, this result is why you are using this module.
 	
 	Parameters
 	----------
@@ -298,6 +299,10 @@ def combine(
 	
 	n_samples
 		Number of samples used for Monte Carlo simulation.
+	
+	rtol: non-negative float
+	atol: non-negative float
+		Values of the statistics with a relative difference closer than specified by atol and rtol are regarded as identical. A small value (e.g., 1e-14) may improve the results if numerical noise makes values different.
 	
 	RNG
 		NumPy random-number generator used for the Monte Carlo simulation.
@@ -370,5 +375,5 @@ def combine(
 		orig_stat  = apply_statistics(statistic,data_orig,alternative=alternative)
 		null_stats = apply_statistics(statistic,data_null,alternative=alternative)
 	
-	return counted_p( orig_stat, null_stats )
+	return counted_p( orig_stat, null_stats, rtol=rtol, atol=atol )
 
