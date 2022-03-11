@@ -89,6 +89,12 @@ def test_counted_p():
 	assert counted_p(0.5,null_stats).pvalue == 0.1
 	assert counted_p(3.5,null_stats).pvalue == 0.4
 	assert counted_p(10 ,null_stats).pvalue == 1.0
+	assert counted_p(0.7,null_stats,atol=0.2).pvalue == 0.1
+	assert counted_p(0.9,null_stats,atol=0.2).pvalue == 0.2
+	assert counted_p(4.1,null_stats,atol=0.2).pvalue == 0.5
+	assert counted_p(4.9,null_stats,atol=0.2).pvalue == 0.6
+	assert counted_p(8.6,null_stats,atol=0.2).pvalue == 0.9
+	assert counted_p(8.9,null_stats,atol=0.2).pvalue == 1.0
 
 def test_std_counted_p(rng):
 	n = 1000  # number of points per dataset
