@@ -53,16 +53,15 @@ def sign_test(x,y=0,alternative="less"):
 			greater,
 		)
 
-def less_or_close(x,y,atol=0,rtol=0):
-	"Whether y is `alt` than x or close with rtol."
+def count_less_or_close(x,y,atol=0,rtol=0):
+	"Counts how often y is less than x or close with atol or rtol."
 	
 	comparison = (y<=x)
 	
 	if atol or rtol:
-		closeness = np.isclose(x,y,atol=atol,rtol=rtol)
-		return np.logical_or( comparison, closeness )
-	else:
-		return comparison
+		comparison |= np.isclose(x,y,atol=atol,rtol=rtol)
+	
+	return np.sum(comparison,axis=0)
 
 Combined_P_Value = namedtuple("Combined_P_Value",("pvalue","std"))
 
@@ -73,7 +72,7 @@ def counted_p(orig_stat,null_stats,**tols):
 	
 	null_stats = np.asarray(null_stats)
 	size = null_stats.shape[0]
-	count = np.sum( less_or_close(orig_stat,null_stats,**tols), axis=0 )
+	count = count_less_or_close(orig_stat,null_stats,**tols)
 		
 	p = (count+1)/(size+1)
 	std = np.maximum(
