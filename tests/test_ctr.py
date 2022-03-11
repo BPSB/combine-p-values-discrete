@@ -246,3 +246,47 @@ def test_identical_weights(method,sampling_method,alt,rng):
 	]
 	assert_matching_p_values(*results,n=n_samples,factor=4,compare=True)
 
+@mark.parametrize("method,variant",combining_statistics)
+def test_less_greater_symmetry(method,variant,rng):
+	m = 10
+	
+	ctrs_A,ctrs_B = [],[]
+	for _ in range(m):
+		n = rng.randint(5,10)
+		data = np.random.normal(size=n)
+		ctrs_A.append( CTR.sign_test( data) )
+		ctrs_B.append( CTR.sign_test(-data) )
+	
+	kwargs = dict(
+			weights = rng.random(m) if variant=="weighted" else None,
+			method = method,
+			n_samples = n_samples,
+			RNG = rng,
+		)
+	result_A = combine(ctrs_A,alternative="less"   ,**kwargs).pvalue
+	result_B = combine(ctrs_B,alternative="greater",**kwargs).pvalue
+	
+	assert_matching_p_values( result_A, result_B, n=n_samples, compare=True )
+
+@mark.parametrize("weighted",[False,True])
+def test_fisher_pearson_symmetry(weighted,rng):
+	m = 10
+	
+	ctrs_F,ctrs_P = [],[]
+	for _ in range(m):
+		n = rng.randint(5,10)
+		data = np.random.normal(size=n)
+		ctrs_F.append( CTR.sign_test( data) )
+		ctrs_P.append( CTR.sign_test(-data) )
+	
+	kwargs = dict(
+			weights = rng.random(m) if weighted else None,
+			n_samples = n_samples,
+			RNG = rng,
+			alternative="less",
+		)
+	result_F =   combine(ctrs_F,method="fisher" ,**kwargs).pvalue
+	result_P = 1-combine(ctrs_P,method="pearson",**kwargs).pvalue
+	
+	assert_matching_p_values( result_F, result_P, n=n_samples, compare=True )
+
