@@ -69,13 +69,19 @@ def sign_test(x,y=0,alternative="less"):
 
 Combined_P_Value = namedtuple("Combined_P_Value",("pvalue","std"))
 
-def counted_p(orig_stat,null_stats):
+def counted_p(orig_stat,null_stats,alternative="less"):
 	"""
 	Estimates the p value of a statistic (`orig_stat`) by comparing with the statistic for samples of a null model (`null_stats`). Returns the p value and its (estimated) standard deviation when sampling with this method.
 	"""
 	null_stats = np.asarray(null_stats)
 	size = null_stats.shape[0]
-	count = np.sum( orig_stat>=null_stats, axis=0 )
+	if alternative=="less":
+		count = np.sum( orig_stat>=null_stats, axis=0 )
+	elif alternative=="greater":
+		count = np.sum( orig_stat<=null_stats, axis=0 )
+	else:
+		raise ValueError('Alternative must be "less" or "greater".')
+		
 	p = (count+1)/(size+1)
 	std = np.maximum(
 			np.sqrt(count*(1-count/size))/(size+1),
