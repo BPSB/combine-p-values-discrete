@@ -27,7 +27,8 @@ examples = [
 	)
 @mark.parametrize("method,variant",combining_statistics)
 @mark.parametrize("sampling_method",["proportional","stochastic"])
-def test_commutativity_and_associativity(combo,method,variant,sampling_method,rng):
+@mark.parametrize("alt",["less","greater","two-sided"])
+def test_commutativity_and_associativity(combo,method,variant,sampling_method,alt,rng):
 	get_p = lambda combo,weights: combine(
 				combo,
 				weights = weights,
@@ -35,6 +36,7 @@ def test_commutativity_and_associativity(combo,method,variant,sampling_method,rn
 				n_samples = n_samples,
 				method = method,
 				sampling_method = sampling_method,
+				alternative = alt,
 			).pvalue
 	
 	n = len(combo)
@@ -51,7 +53,7 @@ def test_commutativity_and_associativity(combo,method,variant,sampling_method,rn
 			result_1,
 			result_2,
 			n_samples,
-			factor = 3 if sampling_method=="proportional" else 4,
+			factor = 3.5 if sampling_method=="proportional" else 4.6,
 		)
 
 @mark.parametrize("example",examples)
@@ -127,12 +129,16 @@ def test_compare_with_combine_pvalues_weighted(n,magnitude,sampling_method,rng):
 @mark.parametrize("method,variant",combining_statistics)
 @mark.parametrize("variables", ["one", "all"])
 @mark.parametrize("sampling_method",["proportional","stochastic"])
-def test_monotony(method,variant,variables,sampling_method,rng):
+@mark.parametrize("alt",["less","greater"])
+def test_monotony(method,variant,variables,sampling_method,alt,rng):
 	# Test that result increases monotonously with respect to input.
 	n,k = 5,7
-	changing_values = np.linspace(0.1,0.9,n)
-	weights = rng.random(k)
+	changing_values = {
+			"less": 10**np.linspace(-3,-0.1,n),
+			"greater": 1-10**np.linspace(-3,-0.1,n),
+		}[alt]
 	pvalues = rng.random(k)
+	weights = rng.uniform(0.1,1,size=k)
 	combined_ps = []
 	errors = []
 	for changing_value in changing_values:
@@ -145,6 +151,7 @@ def test_monotony(method,variant,variables,sampling_method,rng):
 					ctrs,
 					method = method,
 					weights = weights if variant=="weighted" else None,
+					alternative = alt,
 					n_samples = n_samples,
 					sampling_method = sampling_method,
 					RNG = rng,
@@ -162,21 +169,27 @@ phi = lambda z: (1+erf(z/sqrt(2)))/2
 phiinv = lambda x: sqrt(2)*erfinv(2*x-1)
 
 @mark.parametrize(
-			"  method  ,   solution  ",
+			"  method  ,   alt      ,  solution   ",
 		[
-			("tippett" , 1-(1-0.4)**3),
-			("simes"   , 0.9         ),
-			("stouffer", phi((phiinv(0.4)+phiinv(0.7)+phiinv(0.9))/sqrt(3)) ),
+			("tippett" , "less"     , 1-(1-0.4)**3),
+			("simes"   , "less"     , 0.9         ),
+			("stouffer", "less"     , phi((phiinv(0.4)+phiinv(0.7)+phiinv(0.9))/sqrt(3)) ),
+			("tippett" , "greater"  , 1-0.9**3    ),
+			("simes"   , "greater"  , 0.3         ),
+			("stouffer", "greater"  , phi((phiinv(0.6)+phiinv(0.3)+phiinv(0.1))/sqrt(3)) ),
+			("tippett" , "two-sided", (1-0.8**3)  ),
+			("stouffer", "two-sided", 2*phi((phiinv(0.6)+phiinv(0.3)+phiinv(0.1))/sqrt(3)) ),
 		]
 	)
 @mark.parametrize("sampling_method",["proportional","stochastic"])
-def test_simple_case(method,solution,sampling_method,rng):
+def test_simple_case(method,solution,sampling_method,alt,rng):
 	assert_matching_p_values(
 		emulate_continuous_combine_ps(
 			[0.9,0.7,0.4],
-			method=method,
-			RNG=rng,
-			sampling_method=sampling_method,
+			method = method,
+			alternative = alt,
+			RNG = rng,
+			sampling_method = sampling_method,
 		),
 		solution,
 		n_samples
@@ -202,7 +215,8 @@ def test_simple_weighted_case(sampling_method,rng):
 		if variant=="weighted"
 	))
 @mark.parametrize("sampling_method",["proportional","stochastic"])
-def test_identical_weights(method,sampling_method,rng):
+@mark.parametrize("alt",["less","greater","two-sided"])
+def test_identical_weights(method,sampling_method,alt,rng):
 	n = 10
 	ps = rng.random(n)
 	weights = np.full(n,rng.exponential())
@@ -213,6 +227,7 @@ def test_identical_weights(method,sampling_method,rng):
 			RNG=rng,
 			method=method,
 			weights=w,
+			alternative=alt,
 			sampling_method=sampling_method,
 		)
 		for w in [weights,None]

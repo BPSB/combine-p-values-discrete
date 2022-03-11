@@ -59,8 +59,6 @@ The most relevant **continuous tests** are:
 * the test for significance of Pearson’s *r*,
 * ANOVA.
 
-.. _complements:
-
 How this module works
 ---------------------
 
@@ -75,11 +73,18 @@ While this is analytically possible for continuous tests or a small number of di
 To perform these approximations, we use a Monte Carlo simulation sampling combinations of individual *p* values.
 Thanks to modern computing and NumPy, it is easy to make the number of samples very high and the result very accurate.
 
-Some combining methods such as Pearson’s or Mudholkar’s and George’s use the complement of *p* values.
+.. _complements:
+
+Complements
+-----------
+
+In several cases, this module uses the complement *q* of a *p* value.
+For example, combining methods such as Pearson’s or Mudholkar’s and George’s use it as part of their statistics.
 For continuous tests, this complement is straightforwardly computed as :math:`q = 1-p`.
-However, when combining discrete tests this leads to implausible results if :math:`p=1`.
+However, for discrete tests this leads to implausible results, in particular if :math:`p=1`.
 To avoid this, this module uses for *q* the probability to observe such a *p* value or a higher one.
 In analogy to :math:`\text{CDF}(p_0) = P(p≤p_0) = p_0`, we have :math:`\text{CCDF}(p_0) = P(p≥0) = q` (both under the null hypothesis).
+This applies whenever the complement of a *p* value is relevant.
 
 A simple example
 ----------------

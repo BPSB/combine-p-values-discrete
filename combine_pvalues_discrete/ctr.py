@@ -233,13 +233,26 @@ combining_statistics = {
 	("edgington"       ,"weighted"): lambda p,w:    w.dot(p)             ,
 }
 
-def has_arg(statistic,*args):
-	return all(
-			arg in signature(statistic).parameters
-			for arg in args
-		)
-
 statistics_with_inf = {"stouffer"}
+
+def flip_pq(args):
+	if isinstance(args,str) and len(args)==1:
+		if args == "p":
+			return "q"
+		elif args == "q":
+			return "p"
+		else:
+			return args
+	else:
+		return { flip_pq(arg) for arg in args }
+
+def apply_statistics(statistic,data,flipped=False):
+	pars = signature(statistic).parameters
+	kwargs = {
+		par: data[ flip_pq(par) if flipped else par ]
+		for par in pars
+	}
+	return statistic(**kwargs)
 
 def combine(
 		ctrs, weights=None,
@@ -265,9 +278,13 @@ def combine(
 		The function must return the statistics computed along the zero-th axis.
 		For example for the weighted Mudholkar–George method, this function would be `lambda p,q,w:  w.dot(np.log(p/q))`.
 	
-	alternative: "less" or "two-sided"
-		Whether your combined null hypothesis is one- or two-sided.
+	alternative: "less", "greater", or "two-sided"
+		The direction of the (common) trend that your compound null hypothesis is testing against.
 		Mind that this is not about the sidedness of the individual tests: Those should always be one-sided.
+		
+		* If "less", the compound research hypothesis is that the subtests exhibit a trend towards a low p value.
+		* If "less", the compound research hypothesis is that the subtests exhibit a trend towards high p values (close to 1). In this case, the method of choice will be applied to the complements of the p values (see `complements`).
+		* If "two-sided", the compound research hypothesis is that the subtests exhibit either of the two above trends.
 	
 	weights: iterable of numbers
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
@@ -311,48 +328,62 @@ def combine(
 			raise ValueError(f'Method "{method}" is neither known nor callable.')
 		statistic = method
 	
-	kwargs_null = {}
-	kwargs_orig = {}
+	required_args = set(signature(statistic).parameters)
+	if alternative == "greater":
+		required_args = flip_pq(required_args)
+	elif alternative == "two-sided":
+		required_args = required_args | flip_pq(required_args)
+	
 	sampling_kwargs = dict(RNG=RNG,size=n_samples,method=sampling_method)
 	
-	if has_arg(statistic,"p","q"):
-		kwargs_null["p"] = np.empty((len(ctrs),n_samples))
-		kwargs_null["q"] = np.empty((len(ctrs),n_samples))
-		for ctr,target_p,target_q in zip(ctrs,kwargs_null["p"],kwargs_null["q"]):
+	data_null = {}
+	if {"p","q"} <= required_args:
+		data_null["p"] = np.empty((len(ctrs),n_samples))
+		data_null["q"] = np.empty((len(ctrs),n_samples))
+		for ctr,target_p,target_q in zip(ctrs,data_null["p"],data_null["q"]):
 			# target[:] to overwrite the content of target instead of reassigning the variable.
 			target_p[:],target_q[:] = ctr.nulldist.sample_both(**sampling_kwargs)
 	else:
-		if has_arg(statistic,"p"):
-			kwargs_null["p"] = np.vstack([
+		if "p" in required_args:
+			data_null["p"] = np.vstack([
 				ctr.nulldist.sample(**sampling_kwargs)
 				for ctr in ctrs
 			])
-		if has_arg(statistic,"q"):
-			kwargs_null["q"] = np.vstack([
+		if "q" in required_args:
+			data_null["q"] = np.vstack([
 				ctr.nulldist.sample_complement(**sampling_kwargs)
 				for ctr in ctrs
 			])
 	
-	if has_arg(statistic,"p"):
-		kwargs_orig["p"] = np.array([ctr.p for ctr in ctrs])
-	if has_arg(statistic,"q"):
-		kwargs_orig["q"] = np.array([ctr.q for ctr in ctrs])
+	data_orig = {
+			x : np.array([getattr(ctr,x) for ctr in ctrs])
+			for x in ["p","q"]
+		}
 	
 	if weights is not None:
-		for kwargs in (kwargs_null,kwargs_orig):
-			kwargs["w"] = np.asarray(weights)
+		data_null["w"] = data_orig["w"] = np.asarray(weights)
 	
 	err_kwargs = {"divide":"ignore","invalid":"ignore"} if (method in statistics_with_inf) else {}
-	with np.errstate(**err_kwargs):
-		orig_stat = statistic(**kwargs_orig)
-		null_stats = statistic(**kwargs_null)
-	
-	onesided_p = counted_p( orig_stat, null_stats)
 	
 	if alternative=="less":
-		return onesided_p
+		with np.errstate(**err_kwargs):
+			orig_stat  = apply_statistics(statistic,data_orig)
+			null_stats = apply_statistics(statistic,data_null)
+		return counted_p( orig_stat, null_stats )
+	elif alternative=="greater":
+		with np.errstate(**err_kwargs):
+			orig_stat  = apply_statistics(statistic,data_orig,flipped=True)
+			null_stats = apply_statistics(statistic,data_null,flipped=True)
+		return counted_p( orig_stat, null_stats )
 	elif alternative=="two-sided":
-		return 2*onesided_p
+		with np.errstate(**err_kwargs):
+			orig_stat_l  = apply_statistics(statistic,data_orig)
+			null_stats_l = apply_statistics(statistic,data_null)
+			orig_stat_g  = apply_statistics(statistic,data_orig,flipped=True)
+			null_stats_g = apply_statistics(statistic,data_null,flipped=True)
+		orig_stat = min(orig_stat_l,orig_stat_g)
+		null_stats = np.minimum(null_stats_l,null_stats_g)
+		return counted_p( orig_stat, null_stats )
 	else:
-		raise ValueError('Alternative must be "less" or "two-sided".')
+		raise ValueError('Alternative must be "less", "greater", or "two-sided".')
 

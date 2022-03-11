@@ -142,6 +142,9 @@ def mwu_logp_sum(data):
 		for X,Y in data
 	)
 
+def mwu_invert(data):
+	return [ (-X,-Y) for X,Y in data ]
+
 def signtest_combine( data, **kwargs ):
 	ctrs = [ CTR.sign_test(X,Y,alternative="less") for X,Y in data ]
 	return combine(ctrs,n_samples=n_samples,**kwargs).pvalue
@@ -162,21 +165,26 @@ def signtest_logp_sum(data):
 		for X,Y in data
 	)
 
+def signtest_invert(data):
+	return [ (Y,X) for X,Y in data ]
+
 tests = {
-		"signtest": ( signtest_combine, signtest_data, signtest_logp_sum ),
-		"mwu_test": (      mwu_combine,      mwu_data,      mwu_logp_sum ),
+		"signtest": ( signtest_combine, signtest_data, signtest_logp_sum, signtest_invert ),
+		"mwu_test": (      mwu_combine,      mwu_data,      mwu_logp_sum,      mwu_invert ),
 	}
 
 @mark.slow
 @mark.parametrize("method,variant",combining_statistics)
 @mark.parametrize("sampling_method",["proportional","stochastic"])
 @mark.parametrize("test",tests)
-def test_null_distribution(method,variant,test,sampling_method,rng):
-	test_and_combine,create_data,_ = tests[test]
+@mark.parametrize("alt",["less","greater","two-sided"])
+def test_null_distribution(method,variant,test,sampling_method,alt,rng):
+	test_and_combine,create_data,*_ = tests[test]
 	n = 20
 	p_values = [
 		test_and_combine(
 			create_data(rng,n),
+			alternative = alt,
 			RNG = rng,
 			method = method,
 			sampling_method = sampling_method,
@@ -185,7 +193,7 @@ def test_null_distribution(method,variant,test,sampling_method,rng):
 		for _ in range(30)
 	]
 	
-	assert_discrete_uniform(p_values,factor=3.2)
+	assert_discrete_uniform(p_values,factor=4.1)
 
 def create_surrogate(RNG,pairs):
 	"""
@@ -200,17 +208,29 @@ def create_surrogate(RNG,pairs):
 @mark.parametrize("trend",np.linspace(-0.7,0.7,10))
 @mark.parametrize("sampling_method",["proportional","stochastic"])
 @mark.parametrize("test",tests)
-def test_compare_with_surrogates(trend,test,sampling_method,rng):
-	test_and_combine,create_data,logp_sum = tests[test]
+@mark.parametrize("alt",["less","greater","two-sided"])
+def test_compare_with_surrogates(trend,test,sampling_method,alt,rng):
+	test_and_combine,create_data,logp_sum,invert = tests[test]
 	dataset = create_data(rng,10,trend=trend)
 	
-	p_from_combine = test_and_combine(dataset,method="fisher",RNG=rng)
+	p_from_combine = test_and_combine(
+			dataset,
+			method = "fisher",
+			alternative = alt,
+			RNG = rng
+		)
 	
-	n = 1000
+	n = 100
 	
-	original_logp_sum = logp_sum(dataset)
+	evaluate = {
+		"less":      lambda data: logp_sum(data),
+		"greater":   lambda data: logp_sum(invert(data)),
+		"two-sided": lambda data: min( logp_sum(data), logp_sum(invert(data)) ),
+	}[alt]
+	
+	original_logp_sum = evaluate(dataset)
 	surrogate_logp_sums = [
-		logp_sum( create_surrogate(rng,dataset) )
+		evaluate( create_surrogate(rng,dataset) )
 		for _ in range(n)
 	]
 	p_from_surrogates = np.average( original_logp_sum >= surrogate_logp_sums )
@@ -219,6 +239,6 @@ def test_compare_with_surrogates(trend,test,sampling_method,rng):
 			p_from_surrogates,
 			p_from_combine,
 			n = min(n_samples,n),
-			factor=3, compare=True,
+			factor=3.3, compare=True,
 		)
 
