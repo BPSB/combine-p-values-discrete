@@ -71,11 +71,14 @@ class CTR(object):
 		kwargs
 			Further keyword arguments to be passed on to SciPy’s `mannwhitneyu`, such as `alternative`.
 		"""
+		x = np.array(x)
+		y = np.array(y)
+		
 		if "alternative" not in kwargs:
 			raise ValueError("You must specify the alternative.")
 		assert_one_sided(kwargs["alternative"])
 		
-		if has_ties(np.hstack((x,y))):
+		if np.any(x[:,None]==y):
 			raise NotImplementedError("Ties are not yet implemented.")
 		
 		n,m = len(x),len(y)
