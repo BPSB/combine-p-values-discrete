@@ -99,7 +99,16 @@ class PDist(object):
 		else:
 			return all( abs(p1-p2)<=tol for p1,p2 in zip(self,other) )
 	
-	def sample(self,**kwargs):
+	def sample(self,which="p",**kwargs):
+		"""
+		Returns `size` samples from the p or q values (specified by `which`), using `RNG` as the random-number generator. See sample_discrete and sample_uniform for arguments.
+		"""
+		if which=="p":
+			return self.sample_ps(**kwargs)
+		elif which=="q":
+			return self.sample_complement(**kwargs)
+	
+	def sample_ps(self,which="p",**kwargs):
 		"""
 		Returns `size` samples from the distribution using `RNG` as the random-number generator. See sample_discrete and sample_uniform for arguments.
 		"""
