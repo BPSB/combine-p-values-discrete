@@ -34,6 +34,9 @@ class CTR(object):
 		If `None` or empty, all p values will be considered possible, i.e., the test will be assumed to be continuous.
 	"""
 	def __init__(self,p,all_ps=None):
+		if p==0:
+			raise ValueError("p value cannot be zero.")
+		
 		if not is_empty(all_ps) and p not in all_ps:
 			all_ps = np.asarray(all_ps)
 			closest = all_ps[np.argmin(np.abs(all_ps-p))]

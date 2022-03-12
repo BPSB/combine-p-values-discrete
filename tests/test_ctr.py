@@ -11,6 +11,11 @@ from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values
 
 n_samples = 10000
 
+def test_zero_p():
+	with raises(ValueError):
+		CTR( 0, [0,1,2,3] ),
+
+
 examples = [
 	CTR( 0.5, [0.5,      1] ),
 	CTR( 1.0, [0.5,      1] ),
