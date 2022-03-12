@@ -17,6 +17,8 @@ from scipy.stats.distributions import hypergeom
 def assert_one_sided(alternative):
 	if alternative.lower() == "two-sided":
 		raise NotImplementedError("The two-sided test is not supported (and makes little sense for combining test results).")
+	elif alternative not in ["less","greater"]:
+		raise ValueError('Alternative must be "less" or "greater".')
 
 class CTR(object):
 	"""
@@ -151,8 +153,7 @@ class CTR(object):
 		
 		if alternative == "greater":
 			possible_covs = np.flip(possible_covs)
-		elif alternative != "less":
-			raise ValueError('Alternative must be "less" or "greater". (A two-sided test is not supported and makes little sense for combining test results.)')
+		assert_one_sided(alternative)
 		
 		k = len(possible_covs)
 		# Using the last of duplicate covs by updating dictionary in the right order:

@@ -6,15 +6,23 @@ from math import prod, sqrt
 from scipy.stats import combine_pvalues
 from scipy.special import erf, erfinv
 
-from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
+from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics, assert_one_sided
 from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values
 
 n_samples = 10000
 
+def test_assert_one_sided_good():
+	assert_one_sided("less")
+	assert_one_sided("greater")
+
+@mark.parametrize("bad_input",["two-sided","TWO-SIDED","wrzlprmft","LESS","Less"])
+def test_assert_one_sided_bad(bad_input):
+	with raises(Exception):
+		assert_one_sided(bad_input)
+
 def test_zero_p():
 	with raises(ValueError):
 		CTR( 0, [0,1,2,3] ),
-
 
 examples = [
 	CTR( 0.5, [0.5,      1] ),
@@ -68,13 +76,8 @@ def test_combine_single(example):
 # Reproducing a sign test by combining single comparisons:
 
 @mark.parametrize( "n,replicate", product( range(2,15), range(20) ) )
-@mark.parametrize(
-		"     method,            tol ",
-		[
-			("fisher"          ,  0  ),
-			("mudholkar_george",1e-15),
-		] )
-def test_comparison_to_sign_test(n,replicate,method,tol,rng):
+@mark.parametrize( "method", ["fisher","mudholkar_george"] )
+def test_comparison_to_sign_test(n,replicate,method,rng):
 	def my_sign_test_onesided(X,Y):
 		ctrs = [
 				CTR( 0.5 if x<y else 1, [0.5,1.0] )
@@ -83,7 +86,6 @@ def test_comparison_to_sign_test(n,replicate,method,tol,rng):
 		return combine(
 				ctrs,
 				n_samples = n_samples,
-				atol = tol,
 				method = method,
 				RNG = rng,
 			).pvalue
@@ -196,6 +198,7 @@ phiinv = lambda x: sqrt(2)*erfinv(2*x-1)
 			("stouffer", "greater"  , phi((phiinv(0.6)+phiinv(0.3)+phiinv(0.1))/sqrt(3)) ),
 			("tippett" , "two-sided", (1-0.8**3)  ),
 			("stouffer", "two-sided", 2*phi((phiinv(0.6)+phiinv(0.3)+phiinv(0.1))/sqrt(3)) ),
+			( lambda p:np.min(p,axis=0), "less" , 1-(1-0.4)**3 ),
 		]
 	)
 @mark.parametrize("sampling_method",["proportional","stochastic"])
