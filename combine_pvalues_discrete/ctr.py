@@ -265,7 +265,7 @@ def combine(
 		ctrs, weights=None,
 		method="mudholkar_george", alternative="less",
 		n_samples=10000000, sampling_method="proportional",
-		rtol=0, atol=0,
+		rtol=1e-15, atol=1e-15,
 		RNG=None,
 	):
 	"""
@@ -285,6 +285,7 @@ def combine(
 		* A one-dimensional array `w` containing the weights.
 		The function must return the statistics computed along the zero-th axis.
 		For example for the weighted Mudholkar–George method, this function would be `lambda p,q,w:  w.dot(np.log(p/q))`.
+		The sign of the statistics must be such that low values indicate a high significance.
 	
 	alternative: "less", "greater", or "two-sided"
 		The direction of the (common) trend that your compound null hypothesis is testing against.
@@ -302,7 +303,7 @@ def combine(
 	
 	rtol: non-negative float
 	atol: non-negative float
-		Values of the statistics with a relative difference closer than specified by atol and rtol are regarded as identical. A small value (e.g., 1e-14) may improve the results if numerical noise makes values different.
+		Values of the statistics with a relative difference closer than specified by atol and rtol are regarded as identical. A small value (such as the default) may improve the results if numerical noise makes values different.
 	
 	RNG
 		NumPy random-number generator used for the Monte Carlo simulation.

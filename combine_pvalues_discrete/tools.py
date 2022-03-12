@@ -53,8 +53,8 @@ def sign_test(x,y=0,alternative="less"):
 			greater,
 		)
 
-def count_less_or_close(x,y,atol=0,rtol=0):
-	"Counts how often y is less than x or close with atol or rtol."
+def count_greater_or_close(x,y,atol=0,rtol=0):
+	"Counts how often x is greater than y or close with atol or rtol."
 	
 	comparison = (y<=x)
 	
@@ -72,7 +72,7 @@ def counted_p(orig_stat,null_stats,**tols):
 	
 	null_stats = np.asarray(null_stats)
 	size = null_stats.shape[0]
-	count = count_less_or_close(orig_stat,null_stats,**tols)
+	count = count_greater_or_close(orig_stat,null_stats,**tols)
 		
 	p = (count+1)/(size+1)
 	std = np.maximum(
@@ -122,15 +122,16 @@ def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 
 def assert_discrete_uniform(data,factor=3):
 	data = np.asarray(data)
+	n = len(data)
 	values = set(data)
 	if len(values)<2:
 		raise ValueError("Need at least two distinct values.")
 	
 	for value in values:
 		assert_matching_p_values(
-				np.mean(data<=value),
+				count_greater_or_close(value,data,atol=1e-15,rtol=1e-15)/n,
 				value,
-				n = len(data),
+				n = n,
 				factor = factor,
 				compare = False
 			)

@@ -9,7 +9,7 @@ from scipy.special import erf, erfinv
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
 from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values
 
-n_samples = 100000
+n_samples = 10000
 
 examples = [
 	CTR( 0.5, [0.5,      1] ),
@@ -53,7 +53,7 @@ def test_commutativity_and_associativity(combo,method,variant,sampling_method,al
 			result_1,
 			result_2,
 			n_samples,
-			factor = 3.5 if sampling_method=="proportional" else 4.6,
+			factor = 3.5 if sampling_method=="proportional" else 4,
 		)
 
 @mark.parametrize("example",examples)
@@ -64,12 +64,12 @@ def test_combine_single(example):
 
 @mark.parametrize( "n,replicate", product( range(2,15), range(20) ) )
 @mark.parametrize(
-		"     method,            tol , n_samples",
+		"     method,            tol ",
 		[
-			("fisher"          ,  0  , n_samples),
-			("mudholkar_george",5e-16, 10000    ),
+			("fisher"          ,  0  ),
+			("mudholkar_george",1e-15),
 		] )
-def test_comparison_to_sign_test(n,replicate,method,tol,n_samples,rng):
+def test_comparison_to_sign_test(n,replicate,method,tol,rng):
 	def my_sign_test_onesided(X,Y):
 		ctrs = [
 				CTR( 0.5 if x<y else 1, [0.5,1.0] )

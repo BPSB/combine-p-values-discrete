@@ -73,7 +73,7 @@ def test_spearman_null(n,alt,rng):
 			for _ in range(m)
 		]
 	
-	assert_discrete_uniform(p_values,factor=3.2)
+	assert_discrete_uniform(p_values)
 
 @mark.parametrize("n",range(3,9))
 def test_spearman(n,rng):
@@ -91,7 +91,6 @@ def test_spearman(n,rng):
 			np.average( orig_ρ <= null_ρs ),
 			CTR.spearmanr(x,y,alternative="greater").p,
 			n = m,
-			factor=3,
 		)
 
 @mark.parametrize(
@@ -124,7 +123,7 @@ def test_simple_fisher_exact(C,alt,p,all_ps):
 
 def mwu_combine( data, **kwargs ):
 	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]
-	return combine(ctrs,n_samples=n_samples,**kwargs).pvalue
+	return combine(ctrs,**kwargs).pvalue
 
 def mwu_data(RNG,n,trend=0):
 	"""
@@ -147,7 +146,7 @@ def mwu_invert(data):
 
 def signtest_combine( data, **kwargs ):
 	ctrs = [ CTR.sign_test(X,Y,alternative="less") for X,Y in data ]
-	return combine(ctrs,n_samples=n_samples,**kwargs).pvalue
+	return combine(ctrs,**kwargs).pvalue
 
 def signtest_data(RNG,n,trend=0):
 	"""
@@ -180,20 +179,21 @@ tests = {
 @mark.parametrize("alt",["less","greater","two-sided"])
 def test_null_distribution(method,variant,test,sampling_method,alt,rng):
 	test_and_combine,create_data,*_ = tests[test]
-	n = 20
+	n = 10
 	p_values = [
 		test_and_combine(
 			create_data(rng,n),
 			alternative = alt,
 			RNG = rng,
 			method = method,
+			n_samples = 10000,
 			sampling_method = sampling_method,
 			weights = rng.random(n) if variant=="weighted" else None
 		)
 		for _ in range(30)
 	]
 	
-	assert_discrete_uniform(p_values,factor=4.1)
+	assert_discrete_uniform( p_values, factor=4.1 )
 
 def create_surrogate(RNG,pairs):
 	"""
@@ -216,6 +216,7 @@ def test_compare_with_surrogates(trend,test,sampling_method,alt,rng):
 	p_from_combine = test_and_combine(
 			dataset,
 			method = "fisher",
+			n_samples = n_samples,
 			alternative = alt,
 			RNG = rng
 		)
