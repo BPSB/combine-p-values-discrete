@@ -1,7 +1,7 @@
 from pytest import mark, raises
 from itertools import count
 import numpy as np
-from scipy.stats import mannwhitneyu, spearmanr, kendalltau, fisher_exact
+from scipy.stats import mannwhitneyu, spearmanr, kendalltau, fisher_exact, boschloo_exact
 import math
 
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
@@ -118,6 +118,14 @@ def test_simple_fisher_exact(C,alt,p,all_ps):
 	control_p = fisher_exact(C,alternative=alt)[1]
 	assert result.approx( CTR(p,all_ps) )
 	assert np.isclose( result.p, control_p )
+
+def test_simple_boschloo():
+	C = [[1,2],[3,0]]
+	result = CTR.boschloo_exact( C, alternative="less" )
+	control_p = boschloo_exact(C,alternative="less" ).pvalue
+	assert np.isclose( result.p, control_p )
+	all_ps = [ 1/64, 0.079305, 0.273032, 11/32, 0.57860, 49/64, 1 ]
+	assert result.approx( CTR(0.079305,all_ps), tol=1e-5 )
 
 # -----------------
 

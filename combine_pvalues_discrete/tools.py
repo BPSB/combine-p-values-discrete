@@ -27,6 +27,22 @@ def has_ties(array):
 	"""
 	return np.any(np.diff(sorted(array))==0)
 
+def find_similar(array,rtol,atol):
+	"""
+	Returns mask of which pairs of neighbours in an array are closer than eps but not identical.
+	"""
+	return np.logical_and(
+		array[1:] != array[:-1],
+		np.isclose(array[1:],array[:-1],rtol=rtol,atol=atol)
+	)
+
+def unify_sorted(array,rtol=1e-14,atol=0):
+	"""
+	Unify values in a sorted array that only differ from their predecessor by eps – in place.
+	"""
+	while np.any( similar:= find_similar(array,rtol,atol) ):
+		array[1:][similar] = array[:-1][similar]
+
 SignTestResult = namedtuple("SignTestResult",("pvalue","not_tied","statistic"))
 
 def sign_test(x,y=0,alternative="less"):

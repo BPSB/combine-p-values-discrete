@@ -144,14 +144,18 @@ Only two methods fulfil this: the one by Mudholkar and George as well as the one
 Since the latter’s statistics becomes infinite if :math:`p=1` for any subtest (and thus cannot distinguish between this happening for one or almost all tests), I prefer Mudholkar’s and George’s method.
 
 
-What needs to be done
----------------------
+Supported Tests
+---------------
 
-This module is work in progress:
+Currently, this module supports:
 
-* The combining methods and five tests are finished.
-* Everything you can use is thoroughly tested.
-* So far, only the sign test, Mann–Whitney *U* test, Fisher’s exact test, Spearman’s ρ, and Kendall’s τ are supported.
+* the sign test,
+* the Mann–Whitney *U* test,
+* Fisher’s and Boschloo’s exact tests,
+* Spearman’s ρ and Kendall’s τ.
+
+Ties are not supported in every case. If you require any further test or support for ties, please `tell me <https://github.com/BPSB/combine-p-values-discrete/issues/new>`_.
+
 
 Command reference
 -----------------

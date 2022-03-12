@@ -4,11 +4,11 @@ import numpy as np
 from warnings import warn
 from itertools import permutations
 
-from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, has_ties
+from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, has_ties, unify_sorted
 from .pdist import PDist
 
 from scipy.special import erfinv, factorial
-from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact
+from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact, boschloo_exact
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
 from scipy.stats._stats_py import _ttest_finish
 from scipy.stats._mstats_basic import _kendall_p_exact
@@ -36,8 +36,8 @@ class CTR(object):
 		If `None` or empty, all p values will be considered possible, i.e., the test will be assumed to be continuous.
 	"""
 	def __init__(self,p,all_ps=None):
-		if p==0:
-			raise ValueError("p value cannot be zero.")
+		if p==0: raise ValueError("p value cannot be zero.")
+		if np.isnan(p): raise ValueError("p value must not be NaN.")
 		
 		if not is_empty(all_ps) and p not in all_ps:
 			all_ps = np.asarray(all_ps)
@@ -220,7 +220,52 @@ class CTR(object):
 			]
 		
 		return cls( p, possible_ps )
-
+	
+	@classmethod
+	def boschloo_exact( cls, C, alternative="less", n=32, atol=1e-10 ):
+		"""
+		Creates an object representing the result of Boschloo’s exact for a single contingency table C using SciPy’s implementation.
+		
+		Parameters
+		----------
+		C
+			The contingency table.
+		
+		alternative: "less" or "greater"
+		
+		n
+			The same parameter of SciPy’s `boschloo_exact`.
+		
+		atol
+			p values that are closer than this are treated as identical.
+		"""
+		
+		assert_one_sided(alternative)
+		C = np.fliplr(C) if alternative=="greater" else np.array(C)
+		
+		p = boschloo_exact(C,alternative="less",n=n).pvalue
+		
+		n1,n2 = np.sum(C,axis=1)
+		
+		possible_ps = sorted(
+				boschloo_exact(
+						[ [ C11, n1-C11 ], [ C21, n2-C21 ] ],
+						alternative="less",
+						n=n,
+					).pvalue
+				for C11 in range( 0, n1+1 )
+				for C21 in range( C11==0, n2+(C11!=n1) )
+			)
+		
+		# Unify close p values.
+		i = 1
+		while i<len(possible_ps):
+			if possible_ps[i-1]+atol > possible_ps[i]:
+				del possible_ps[i]
+			else:
+				i += 1
+		
+		return cls( p, possible_ps )
 
 combining_statistics = {
 	("fisher"          ,"normal"  ): lambda p:  np.sum( np.log(p)     , axis=0 ),
