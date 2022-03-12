@@ -261,7 +261,7 @@ def test_less_greater_symmetry(method,variant,rng):
 	ctrs_A,ctrs_B = [],[]
 	for _ in range(m):
 		n = rng.randint(5,10)
-		data = np.random.normal(size=n)
+		data = rng.normal(size=n)
 		ctrs_A.append( CTR.sign_test( data) )
 		ctrs_B.append( CTR.sign_test(-data) )
 	
@@ -283,7 +283,7 @@ def test_fisher_pearson_symmetry(weighted,rng):
 	ctrs_F,ctrs_P = [],[]
 	for _ in range(m):
 		n = rng.randint(5,10)
-		data = np.random.normal(size=n)
+		data = rng.normal(size=n)
 		ctrs_F.append( CTR.sign_test( data) )
 		ctrs_P.append( CTR.sign_test(-data) )
 	
