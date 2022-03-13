@@ -48,16 +48,15 @@ The most relevant **discrete tests** are:
 * the Mann–Whitney *U* test,
 * Wilcoxon’s signed rank test,
 * any test based on a ranked correlation such as Kendall’s *τ* and Spearman’s *ρ*,
-* the Kruskal–Wallis test,
-* Fisher’s exact test and any other test for integer contingency tables.
+* Boschloo’s exact test and any other test for integer contingency tables.
 
 Tests whose result continuously depends on the samples are continuous.
 The most relevant **continuous tests** are:
 
 * all flavours of the *t* test,
-* the Kolmogorov–Smirnov test,
 * the test for significance of Pearson’s *r*,
-* ANOVA.
+
+Tests such as the Kruskal–Wallis test, ANOVA or the Kolmogorov–Smirnov test are not listed  above because I cannot imagine a scenario where combining their *po values makes sense.
 
 How this module works
 ---------------------
