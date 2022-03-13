@@ -94,7 +94,7 @@ The reason for this is that the confidence interval of the null-model approach i
 
 if __name__ == "__main__":
 	# example-start
-	data = [#   C                T
+	data = [# control group  , treatment group
 			( [8,13,37]      , [43,51]       ), # Breed 1
 			( [60,68,46,45]  , [30]          ), # Breed 2
 			( [92,97,98]     , [84,89]       ), # …
