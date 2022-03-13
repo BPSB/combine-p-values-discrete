@@ -196,7 +196,7 @@ class CTR(object):
 	@classmethod
 	def fisher_exact( cls, C, alternative="less" ):
 		"""
-		Creates an object representing the result of Fisher’s exact test for a single contingency table C. This is unrelated to Fisher’s method of combining p values.
+		Creates an object representing the result of Fisher’s exact test for a single contingency table C. This is unrelated to Fisher’s method of combining p values. Note that in the vast majority of scientific applications, the restrictive conditions of Fisher’s exact test are not met and Boschloo’s exact test is more appropriate.
 		
 		Parameters
 		----------
