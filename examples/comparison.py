@@ -7,7 +7,7 @@ In this example, we illustrate the benefits of this module by comparing it with 
 Suppose we want to to explore the effect on a drug on dogs.
 We expect our observable (by which we measure the effect of the drug) be more affected by the dog breed than by the drug, e.g., because a poodle is generally weaker than a mastiff.
 Therefore we group the dogs by breed a priori, creating sub-datasets.
-Each breed group gets further randomly split into a treatment and control group.
+Each breed group gets further randomly split into a treatment (T) and control group (C).
 Since not all dogs complete the study, our sub-datasets become very inhomogeneous in sample size.
 
 Our data looks like this:
@@ -94,40 +94,40 @@ The reason for this is that the confidence interval of the null-model approach i
 
 if __name__ == "__main__":
 	# example-start
-	data = [
-		( [8,13,37]      , [43,51]       ),
-		( [60,68,46,45]  , [30]          ),
-		( [92,97,98]     , [84,89]       ),
-		( [14]           , [21,45,31,23] ),
-		( [24,58,0,24,33], [65,51,61]    ),
-		( [93,76,70,83]  , [84]          ),
-		( [10,2]         , [28,36,11]    ),
-		( [27]           , [38,58]       ),
-		( [18]           , [12]          ),
-		( [20,44,14,68]  , [73,22,80]    ),
+	data = [#   C                T
+			( [8,13,37]      , [43,51]       ),
+			( [60,68,46,45]  , [30]          ),
+			( [92,97,98]     , [84,89]       ),
+			( [14]           , [21,45,31,23] ),
+			( [24,58,0,24,33], [65,51,61]    ),
+			( [93,76,70,83]  , [84]          ),
+			( [10,2]         , [28,36,11]    ),
+			( [27]           , [38,58]       ),
+			( [18]           , [12]          ),
+			( [20,44,14,68]  , [73,22,80]    ),
 	]
 	
 	# Pooling data and MWU test
 	from scipy.stats import mannwhitneyu
 	
-	pooled_Xs = [ x for X,Y in data for x in X ]
-	pooled_Ys = [ y for X,Y in data for y in Y ]
-	print( mannwhitneyu(pooled_Xs,pooled_Ys,alternative="less") )
+	pooled_Cs = [ c for C,T in data for c in C ]
+	pooled_Ts = [ t for C,T in data for t in T ]
+	print( mannwhitneyu(pooled_Cs,pooled_Ts,alternative="less") )
 	# MannwhitneyuResult(statistic=282.0, pvalue=0.30908071682819527)
 	
 	# Summarizing data and sign test
 	import numpy as np
 	from combine_pvalues_discrete import sign_test
 	
-	reduced_Xs = [ np.median(X) for X,Y in data ]
-	reduced_Ys = [ np.median(Y) for X,Y in data ]
-	print( sign_test( reduced_Xs, reduced_Ys, alternative="less" ) )
+	reduced_Cs = [ np.median(C) for C,T in data ]
+	reduced_Ts = [ np.median(T) for C,T in data ]
+	print( sign_test( reduced_Cs, reduced_Ts, alternative="less" ) )
 	# SignTestResult(pvalue=0.171875, not_tied=10, statistic=3)
 	
 	# Combining MWU results without respecting discreteness
 	from scipy.stats import combine_pvalues, mannwhitneyu
 	
-	pvalues = [ mannwhitneyu(X,Y,alternative="less").pvalue for X,Y in data ]
+	pvalues = [ mannwhitneyu(C,T,alternative="less").pvalue for C,T in data ]
 	statistic,pvalue = combine_pvalues(pvalues,method="fisher")
 	print(statistic,pvalue)
 	# (27.447712265267114, 0.123131292229715)
@@ -135,13 +135,13 @@ if __name__ == "__main__":
 	# Combining MWU results with respecting discreteness
 	from combine_pvalues_discrete import CTR, combine
 	
-	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]
+	ctrs = [ CTR.mann_whitney_u(C,T,alternative="less") for C,T in data ]
 	print( combine(ctrs,method="fisher") )
 	# Combined_P_Value(pvalue=0.0014229998577000142, std=1.1920046440408576e-05)
 	
 	# Demonstrating correctness with null-model simulation
 	def fisher_statistic(dataset):
-		pvalues = [ mannwhitneyu(X,Y,alternative="less").pvalue for X,Y in dataset ]
+		pvalues = [ mannwhitneyu(C,T,alternative="less").pvalue for C,T in dataset ]
 		return -2*np.sum(np.log(pvalues))
 	
 	data_statistic = fisher_statistic(data)
@@ -151,8 +151,8 @@ if __name__ == "__main__":
 	rng = np.random.default_rng()
 	def null_sample(data):
 		return [
-			( rng.random(len(X)), rng.random(len(Y)) )
-			for X,Y in data
+			( rng.random(len(C)), rng.random(len(T)) )
+			for C,T in data
 		]
 	
 	n = 10000
