@@ -47,7 +47,7 @@ SignTestResult = namedtuple("SignTestResult",("pvalue","not_tied","statistic"))
 
 def sign_test(x,y=0,alternative="less"):
 	"""
-	Sign test.
+	Just the sign test without any combination features, provided because it’s there.
 	
 	**two-sided:**
 	Pass paired samples `x` and `y` as arguments. The tested null hypothesis is that `x[i]` and `y[i]` are from the same distribution (separately for each `i`).
