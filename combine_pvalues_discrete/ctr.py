@@ -24,16 +24,16 @@ class CTR(object):
 	"""
 	CTR = combinable test result
 	
-	Represents a single test result. Use the default constructor to implement a test yourself or use one of the class methods for the respective result.
+	Represents a single test result. Use the default constructor to implement a test yourself or use one of the class methods for the respective test.
 	
 	Parameters
 	----------
 	p
-		The p value yielded by the test for the investigated sub-dataset.
+		The *p* value yielded by the test for the investigated sub-dataset.
 	
 	all_ps
-		An iterable containing all possible p values of the test for datasets with the same size as the dataset for this individual test.
-		If `None` or empty, all p values will be considered possible, i.e., the test will be assumed to be continuous.
+		An iterable containing all possible *p* values of the test for datasets with the same size as the dataset for this individual test.
+		If `None` or empty, all *p* values will be considered possible, i.e., the test will be assumed to be continuous.
 	"""
 	def __init__(self,p,all_ps=None):
 		if p==0: raise ValueError("p value cannot be zero.")
@@ -65,7 +65,6 @@ class CTR(object):
 		"""
 		Creates an object representing the result of a single Mann–Whitney *U* test (using SciPy’s `mannwhitneyu`).
 		
-		The two-sided test is not supported because it makes little sense in a combination scenario.
 		Ties are not supported yet because I expect them not to occur in the scenarios that require test combinations (but I may be wrong about this) and they make things much more complicated.
 		
 		Parameters
@@ -106,7 +105,6 @@ class CTR(object):
 			The two arrays of paired samples to compare. If `y` is a number, a one-sample sign test is performed with `y` as the median. With `y` as an iterable, the test is two-sided.
 		
 		alternative: "less" or "greater"
-			The two-sided test is not supported because it makes little sense in a combination scenario.
 		"""
 		
 		assert_one_sided(alternative)
@@ -120,7 +118,7 @@ class CTR(object):
 	def spearmanr( cls, x, y, alternative="greater", n_thresh=9 ):
 		"""
 		Creates an object representing the result of a single Spearman’s ρ test.
-		If the size of arrays n! is smaller than n_thresh, p values are exactly determined using a permutation test. Otherwise p values are computed using SciPy’s `spearmanr`, but with an imposed lower limit of n! and a uniform distribution of p values is assumed.
+		If the size of `x` and `y`, *n,* is smaller than `n_thresh`, *p* values are exactly determined using a permutation test. Otherwise *p* values are computed using SciPy’s `spearmanr` assuming a uniform distribution of *p* values and ensuring :math:`p≥\\frac{1}{n!}`.
 		
 		Parameters
 		----------
@@ -165,7 +163,7 @@ class CTR(object):
 	@classmethod
 	def kendalltau( cls, x, y, **kwargs ):
 		"""
-		Creates an object representing the result of a single Kendall’s τ test using SciPy’s `kendalltau` to compute p values.
+		Creates an object representing the result of a single Kendall’s τ test using SciPy’s `kendalltau` to compute *p* values.
 		
 		NaNs and ties are not supported.
 		
@@ -196,11 +194,11 @@ class CTR(object):
 	@classmethod
 	def fisher_exact( cls, C, alternative="less" ):
 		"""
-		Creates an object representing the result of Fisher’s exact test for a single contingency table C. This is unrelated to Fisher’s method of combining p values. Note that in the vast majority of scientific applications, the restrictive conditions of Fisher’s exact test are not met and Boschloo’s exact test is more appropriate.
+		Creates an object representing the result of Fisher’s exact test for a single contingency table C. This is unrelated to Fisher’s method of combining *p* values. Note that most scientific applications do not meet the restrictive conditions of this test and Boschloo’s exact test is more appropriate.
 		
 		Parameters
 		----------
-		C
+		C: 2×2 array or nested iterable
 			The contingency table.
 		
 		alternative: "less" or "greater"
@@ -228,7 +226,7 @@ class CTR(object):
 		
 		Parameters
 		----------
-		C
+		C: 2×2 array or nested iterable
 			The contingency table.
 		
 		alternative: "less" or "greater"
@@ -237,7 +235,7 @@ class CTR(object):
 			The same parameter of SciPy’s `boschloo_exact`.
 		
 		atol
-			p values that are closer than this are treated as identical.
+			*p* values that are closer than this are treated as identical.
 		"""
 		
 		assert_one_sided(alternative)
@@ -318,7 +316,7 @@ def combine(
 		RNG=None,
 	):
 	"""
-	Estimates the combined p value of combinable test results. Usually, this result is why you are using this module.
+	Estimates the combined *p* value of combinable test results. Usually, this result is why you are using this module.
 	
 	Parameters
 	----------
@@ -329,9 +327,11 @@ def combine(
 		One of "fisher", "pearson", "mudholkar_george", "stouffer", "tippett", "edgington", "simes", or a self-defined function.
 		
 		In the latter case, the function can have the following arguments (which must be named as given):
-		* A two-dimensional array `p` containing the p values.
+		
+		* A two-dimensional array `p` containing the *p* values.
 		* A two-dimensional array `q` containing their complements.
 		* A one-dimensional array `w` containing the weights.
+		
 		The function must return the statistics computed along the zero-th axis.
 		For example for the weighted Mudholkar–George method, this function would be `lambda p,q,w:  w.dot(np.log(p/q))`.
 		The sign of the statistics must be such that low values indicate a high significance.
@@ -340,38 +340,38 @@ def combine(
 		The direction of the (common) trend that your compound null hypothesis is testing against.
 		Mind that this is not about the sidedness of the individual tests: Those should always be one-sided.
 		
-		* If "less", the compound research hypothesis is that the subtests exhibit a trend towards a low p value.
-		* If "less", the compound research hypothesis is that the subtests exhibit a trend towards high p values (close to 1). In this case, the method of choice will be applied to the complements of the p values (see `complements`).
+		* If "less", the compound research hypothesis is that the subtests exhibit a trend towards a low *p* value.
+		* If "greater", the compound research hypothesis is that the subtests exhibit a trend towards high *p* values (close to 1). In this case, the method of choice will be applied to the complements of the *p* values (see `complements`).
 		* If "two-sided", the compound research hypothesis is that the subtests exhibit either of the two above trends.
 	
 	weights: iterable of numbers
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
 	
 	n_samples
-		Number of samples used for Monte Carlo simulation.
+		Number of samples used for Monte Carlo simulation. High numbers increase the accuracy, but also the runtime and memory requirements.
 	
 	rtol: non-negative float
 	atol: non-negative float
-		Values of the statistics with a relative difference closer than specified by atol and rtol are regarded as identical. A small value (such as the default) may improve the results if numerical noise makes values different.
+		Values of the statistics with closer than specified by `atol` and `rtol` are regarded as identical (as in `numpy.isclose`). A small value (such as the default) may improve the results if numerical noise makes values different.
 	
 	RNG
 		NumPy random-number generator used for the Monte Carlo simulation.
-		Will be automatically generated if not specified.
+		If `None`, it will be automatically generated if not specified.
 	
 	sampling_method: "proportional" or "stochastic"
-		If `"proportional"`, the frequency p values for each individual result will be exactly proportional to its probability – except for rounding. Only the rounding and the order of elements will be stochastic.
+		If `"proportional"`, the frequency *p* values for each individual result will be exactly proportional to its probability – except for rounding. Only the rounding and the order of elements will be random.
 		
-		If `method` is `"stochastic"`, the values will be randomly sampled and thus their actual frequencies are subject to stochastic fluctuations. This usually leads to slightly less accurate results, but the simulations are statistically independent.
+		If `"stochastic"`, the values will be randomly sampled and thus their sampled frequencies are subject to stochastic fluctuations. This usually leads to slightly less accurate results, but the simulations are statistically independent.
 		
-		The author of these lines cannot think of any disadvantage to the latter approach.
+		The author of these lines cannot think of any disadvantage to the first approach and has not found any in numerical experiments.
 	
 	Returns
 	-------
 	pvalue
-		The estimated combined p value.
+		The estimated combined *p* value.
 	
 	std
-		The estimated standard deviation of p values when repeating the sampling. This is accurate for stochastic sampling and overestimating for proportional sampling.
+		The estimated standard deviation of *p* values when repeating the sampling. This is accurate for stochastic sampling and overestimating for proportional sampling.
 	"""
 	
 	if len(ctrs)==1:

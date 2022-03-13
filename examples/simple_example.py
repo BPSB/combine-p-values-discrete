@@ -29,7 +29,7 @@ We do so by doing something very similar with `B_1` and `B_2` and the Mann–Whi
 
 Finally, we perform the *t* test on `C_1` and `C_2`.
 Since the *t* test is a continuous test, we do not need a special constructor to create a `CTR`, but can use generic one using only the *p* value computed with an existing function, here `scipy.stats.ttest_rel`.
-The argument `[]` specifies that the test is continuous:
+Leaving the second argument empty specifies that the test is continuous:
 
 .. literalinclude:: ../examples/simple_example.py
 	:start-after: example-st\u0061rt

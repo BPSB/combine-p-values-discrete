@@ -69,13 +69,13 @@ These objects can then be combined using the `combine` function.
 
 The difficulty for determining the combined *p* value is convolving the respective null distributions.
 While this is analytically possible for continuous tests or a small number of discrete tests, it is requires numerical approximations otherwise.
-To perform these approximations, we use a Monte Carlo simulation sampling combinations of individual *p* values.
+To perform these approximations, we use a Monte Carlo sampling of combinations of individual *p* values.
 Thanks to modern computing and NumPy, it is easy to make the number of samples very high and the result very accurate.
 
 .. _complements:
 
 Complements
------------
+```````````
 
 In several cases, this module uses the complement *q* of a *p* value.
 For example, combining methods such as Pearson’s or Mudholkar’s and George’s use it as part of their statistics.
@@ -114,7 +114,8 @@ If your test is continuous, you do not need to implement anything, but can just 
 
 Note that individual tests should always be one-sided for the following reason:
 If you have two equally significant, but opposing sub-results, they should not add in effect, but cancel each other.
-This is not possible when you use two-sided subtests, since all information on the directionality of a result gets lost.
+This is not possible when you use two-sided sub-tests, since all information on the directionality of a result gets lost.
+You can obtain a two-sided result with `combine` though, which accounts for trends in either direction as long as consistent over all datasets.
 
 Example: Mann–Whitney *U* test
 ``````````````````````````````
@@ -127,22 +128,22 @@ Why is the default combining method Mudholkar’s and George’s?
 
 I assume here that you want to investigate the research hypothesis that all datasets are subject to the same trend.
 The trend may manifest more clearly in some of the datasets (and you don’t know which a priori), but it should not be inverted (other than by chance).
-In this case, you would perform one-sided subtests.
-(If you would consider both directions of trend a finding, the combination needs to be two-sided, not the subtests.)
+In this case, you would perform one-sided sub-tests.
+(If you would consider both directions of trend a finding, the combination needs to be two-sided, not the sub-tests.)
 
-If the *p* value of such a subtest is small, the sub-dataset exhibits the trend you hypothesised.
-Conversely, if the complement :math:`q ≈ 1-p` of a subtest is small, the sub-dataset exhibits a trend opposite to what you hypothesised – with a *p* value *q*.
+If the *p* value of such a sub-test is small, the sub-dataset exhibits the trend you hypothesised.
+Conversely, if the complement :math:`q ≈ 1-p` of a sub-test is small, the sub-dataset exhibits a trend opposite to what you hypothesised – with a *p* value *q*.
 (See `complements` on how *q* is defined for the purposes of this module.)
-I think that the combined *p* values should reflect this, i.e., the complement *q* should indicate the significance of the opposite one-sided hypothesis (not the null hypothesis) just like the *p* value indicates the significance of the null hypothesis.
+I think that the combined *p* values should reflect this, i.e., the complement *q* should indicate the significance of the opposite one-sided hypothesis (not to be confused with the null hypothesis) just like the *p* value indicates the significance of the research hypothesis.
 
-To achieve this, the combining method must be treating *p* and *q* in a symmetrical fashion.
+To achieve this, the combining method must treat *p* and *q* in a symmetrical fashion.
 This also means that the following results exactly negate each other:
 
-* a subtest with :math:`p=p_0`.
-* a subtest with :math:`q=p_0`, i.e., :math:`p≈1-p_0`.
+* a sub-test with :math:`p=p_0`.
+* a sub-test with :math:`q=p_0`, i.e., :math:`p≈1-p_0`.
 
 Only two methods fulfil this: the one by Mudholkar and George as well as the one by Stouffer.
-Since the latter’s statistics becomes infinite if :math:`p=1` for any subtest (and thus cannot distinguish between this happening for one or almost all tests), I prefer Mudholkar’s and George’s method.
+Since the latter’s statistics becomes infinite if :math:`p=1` for any sub-test (and thus cannot distinguish between this happening for one or almost all tests), I prefer Mudholkar’s and George’s method.
 
 
 Supported Tests
@@ -157,6 +158,7 @@ Currently, this module supports:
 * all continuous tests (just use `CTR(p)`).
 
 Ties are not supported in every case. If you require any further test or support for ties, please `tell me <https://github.com/BPSB/combine-p-values-discrete/issues/new>`_.
+Two-sided tests are not supported because I cannot imagine a combination scenario where they make sense.
 
 
 Command reference

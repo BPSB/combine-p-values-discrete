@@ -26,7 +26,7 @@ The alternative hypothesis is that that the first pair of samples are from a dis
 
 First, suppose we discard our information on breeds and pool the control and treatment groups.
 We then apply the Mann–Whitney *U* test to the pooled samples.
-This way, we do not need to combine tests, but we lose statistical power.
+This way, we do not need to combine tests, but we lose statistical power, i.e., we increase the false-negative rate.
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
@@ -88,8 +88,8 @@ Finally we sample `n=10000` times from our null model and estimate the *p* valu
 	:lines: 62-66
 
 This confirms the low *p* value we obtained with `combine` above and that the *p* values obtained with the other methods were too high.
-You may note that this value does not agree with the result of `combine` from above.
-The reason for this is that the variability of the null-model approach is so high (on account of `n` being low) and obtaining a precision comparable to `compare` would require an excessive amount of time.
+You may note that although this value is low it is not within the confidence interval of the result of `combine` from above.
+The reason for this is that the confidence interval of the null-model approach is much larger (on account of `n` being low) and obtaining a precision comparable to `compare` would require an excessive amount of time.
 """
 
 if __name__ == "__main__":
