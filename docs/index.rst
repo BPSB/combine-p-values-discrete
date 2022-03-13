@@ -111,6 +111,8 @@ You can use these as arguments of `CTR`’s default constructor.
 
 The best way to find all possible *p* values is to get a rough understanding of the test statistics and look into an existing implementation of the test, so you don’t have to fully re-invent the wheel.
 
+If your test is continuous, you do not need to implement anything, but can just use `CTR(p)`, where `p` is the *p* value of your individual test.
+
 Note that individual tests should always be one-sided for the following reason:
 If you have two equally significant, but opposing sub-results, they should not add in effect, but cancel each other.
 This is not possible when you use two-sided subtests, since all information on the directionality of a result gets lost.
@@ -152,7 +154,8 @@ Currently, this module supports:
 * the sign test,
 * the Mann–Whitney *U* test,
 * Fisher’s and Boschloo’s exact tests,
-* Spearman’s ρ and Kendall’s τ.
+* Spearman’s ρ and Kendall’s τ,
+* all continuous tests (just use `CTR(p)`).
 
 Ties are not supported in every case. If you require any further test or support for ties, please `tell me <https://github.com/BPSB/combine-p-values-discrete/issues/new>`_.
 
