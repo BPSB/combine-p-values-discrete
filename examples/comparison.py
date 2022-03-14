@@ -59,7 +59,7 @@ Finally, by using this module, we can take into account the discreteness of test
 
 (We here use Fisher’s method, since it simplifies the following demonstration. In general, I don’t recommend it.)
 
-Checking the Result
+Checking the result
 ```````````````````
 
 Let’s convince ourselves that the result of `combine` is actually correct.

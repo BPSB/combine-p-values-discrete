@@ -276,16 +276,23 @@ def test_less_greater_symmetry(method,variant,rng):
 	
 	assert_matching_p_values( result_A, result_B, n=n_samples, compare=True )
 
+@mark.parametrize(
+		"method_A,method_B",
+	[
+		( "mudholkar_george", "mudholkar_george" ),
+		( "fisher"          , "pearson"          ),
+		( "edgington_sym"   , "edgington_sym"    ),
+	])
 @mark.parametrize("weighted",[False,True])
-def test_fisher_pearson_symmetry(weighted,rng):
+def test_complement_symmetry(method_A,method_B,weighted,rng):
 	m = 10
 	
-	ctrs_F,ctrs_P = [],[]
+	ctrs_A,ctrs_B = [],[]
 	for _ in range(m):
 		n = rng.randint(5,10)
 		data = rng.normal(size=n)
-		ctrs_F.append( CTR.sign_test( data) )
-		ctrs_P.append( CTR.sign_test(-data) )
+		ctrs_A.append( CTR.sign_test( data) )
+		ctrs_B.append( CTR.sign_test(-data) )
 	
 	kwargs = dict(
 			weights = rng.random(m) if weighted else None,
@@ -293,8 +300,8 @@ def test_fisher_pearson_symmetry(weighted,rng):
 			RNG = rng,
 			alternative="less",
 		)
-	result_F =   combine(ctrs_F,method="fisher" ,**kwargs).pvalue
-	result_P = 1-combine(ctrs_P,method="pearson",**kwargs).pvalue
+	result_A =   combine(ctrs_A,method=method_A ,**kwargs).pvalue
+	result_B = 1-combine(ctrs_B,method=method_B,**kwargs).pvalue
 	
-	assert_matching_p_values( result_F, result_P, n=n_samples, compare=True )
+	assert_matching_p_values( result_A, result_B, n=n_samples, compare=True )
 

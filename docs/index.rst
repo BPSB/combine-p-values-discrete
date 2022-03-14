@@ -56,7 +56,7 @@ The most relevant **continuous tests** are:
 * all flavours of the *t* test,
 * the test for significance of Pearson’s *r*,
 
-Tests such as the Kruskal–Wallis test, ANOVA or the Kolmogorov–Smirnov test are not listed  above because I cannot imagine a scenario where combining their *po values makes sense.
+Tests such as the Kruskal–Wallis test, ANOVA or the Kolmogorov–Smirnov test are not listed  above because I cannot imagine a scenario where combining their *p* values makes sense.
 
 How this module works
 ---------------------
@@ -123,8 +123,27 @@ Example: Mann–Whitney *U* test
 .. automodule:: mwu
 
 
+Supported combining methods
+---------------------------
+
+This module supports the following combining methods.
+They are listed together with their test statistics – with :math:`p_i` being the *p* values of the individual tests and :math:`q_i` being their complements (see `complements`):
+
+* Fisher: :math:`\prod\limits_i p_i`
+* Pearson: :math:`\prod\limits_i q_i^{-1}`
+* Mudholkhar and George: :math:`\prod\limits_i \frac{p_i}{q_i}`
+* Edgington: :math:`\sum\limits_i p_i` and Edgington symmetrised: :math:`\sum\limits_i p_i+1-q_i` (see below as to why you may want this)
+* Stouffer: :math:`\sum\limits_i \Phi^{-1} (p_i)`, where :math:`\Phi` is the CDF of the standard normal distribution.
+* Simes: :math:`\min\limits_i \left( \frac{p_i}{R(p_i)} \right)`, where :math:`R(p_i)` is the rank of :math:`p_i` amongst all combined *p* values.
+* Tippett: :math:`\min\limits_i(p_i)`
+
+Weighted variants exist for all but the latter two (for which they do not make sense).
+
+Note that we use different, but equivalent statistics internally for numerical reasons.
+
+
 Why is the default combining method Mudholkar’s and George’s?
--------------------------------------------------------------
+`````````````````````````````````````````````````````````````
 
 I assume here that you want to investigate the research hypothesis that all datasets are subject to the same trend.
 The trend may manifest more clearly in some of the datasets (and you don’t know which a priori), but it should not be inverted (other than by chance).
@@ -142,8 +161,13 @@ This also means that the following results exactly negate each other:
 * a sub-test with :math:`p=p_0`.
 * a sub-test with :math:`q=p_0`, i.e., :math:`p≈1-p_0`.
 
-Only two methods fulfil this: the one by Mudholkar and George as well as the one by Stouffer.
-Since the latter’s statistics becomes infinite if :math:`p=1` for any sub-test (and thus cannot distinguish between this happening for one or almost all tests), I prefer Mudholkar’s and George’s method.
+Of the supported methods, only three fulfil this:
+
+* Stouffer’s method which becomes infinite if :math:`p=1` for any sub-test (and thus cannot distinguish between this happening for one or almost all tests)
+* Edgington’s symmetrised method, which does not give extreme *p* values the emphasis they deserve (in my humble opinion), e.g., a *p* value changing from 0.1 to 0.001 has the same effect as one changing from 0.5 to 0.401.
+* Mudholkar’s and George’s method, which puts emphasis on extreme *p* values, i.e., close to 0 or 1.
+
+I therefore prefer the latter.
 
 
 Supported Tests
