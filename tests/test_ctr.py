@@ -300,7 +300,7 @@ def test_complement_symmetry(method_A,method_B,weighted,rng):
 			RNG = rng,
 			alternative="less",
 		)
-	result_A =   combine(ctrs_A,method=method_A ,**kwargs).pvalue
+	result_A =   combine(ctrs_A,method=method_A,**kwargs).pvalue
 	result_B = 1-combine(ctrs_B,method=method_B,**kwargs).pvalue
 	
 	assert_matching_p_values( result_A, result_B, n=n_samples, compare=True )
