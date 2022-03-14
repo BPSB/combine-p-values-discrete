@@ -258,12 +258,12 @@ def test_identical_weights(method,sampling_method,alt,rng):
 def test_less_greater_symmetry(method,variant,rng):
 	m = 10
 	
-	ctrs_A,ctrs_B = [],[]
+	ctrs_L,ctrs_G = [],[]
 	for _ in range(m):
 		n = rng.randint(5,10)
 		data = rng.normal(size=n)
-		ctrs_A.append( CTR.sign_test( data) )
-		ctrs_B.append( CTR.sign_test(-data) )
+		ctrs_L.append( CTR.sign_test( data) )
+		ctrs_G.append( CTR.sign_test(-data) )
 	
 	kwargs = dict(
 			weights = rng.random(m) if variant=="weighted" else None,
@@ -271,10 +271,10 @@ def test_less_greater_symmetry(method,variant,rng):
 			n_samples = n_samples,
 			RNG = rng,
 		)
-	result_A = combine(ctrs_A,alternative="less"   ,**kwargs).pvalue
-	result_B = combine(ctrs_B,alternative="greater",**kwargs).pvalue
+	result_L = combine(ctrs_L,alternative="less"   ,**kwargs).pvalue
+	result_G = combine(ctrs_G,alternative="greater",**kwargs).pvalue
 	
-	assert_matching_p_values( result_A, result_B, n=n_samples, compare=True )
+	assert_matching_p_values( result_L, result_G, n=n_samples, compare=True )
 
 @mark.parametrize(
 		"method_A,method_B",
