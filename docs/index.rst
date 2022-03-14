@@ -3,6 +3,21 @@ Combine discrete *p* values (in Python)
 
 This module provides a toolbox for combining *p* values of rank tests and other tests with a discrete null distribution.
 
+Installation
+------------
+
+To install from PyPI use something along the lines of:
+
+	.. code-block:: bash
+	
+		pip install combine-pvalues-discrete
+
+Or use the following to directly install from GitHub:
+
+	.. code-block:: bash
+	
+		pip install git+git://github.com/BPSB/combine-p-values-discrete
+
 When do you need this?
 ----------------------
 
