@@ -2,6 +2,7 @@ Combine discrete *p* values (in Python)
 =======================================
 
 This module provides a toolbox for combining *p* values of rank tests and other tests with a discrete null distribution.
+The focus lies on the analysis of segmented datasets as opposed to a meta-analysis of separate studies, although the latter is also possible.
 
 Installation
 ------------
@@ -24,7 +25,7 @@ When do you need this?
 This module has a scope similar to SciPy’s `combine_pvalues`_:
 
 * You have a dataset consisting of **independent** sub-datasets. (So this is not about multiple testing or pseudo-replication.)
-* For each sub-dataset, you have performed a test investigating the **same** null hypothesis. (Often, this is the same test and the sub-datasets only differ in size.)
+* For each sub-dataset, you have performed a test investigating the **same or similar** research hypothesis. (Often, this is the same one-sided test and the sub-datasets only differ in size.)
 * There is no straightforward test to apply to the entire dataset.
 * You want a single *p* value for the null hypothesis taking into account the entire dataset, i.e., you want to combine your test results for the sub-datasets.
 
