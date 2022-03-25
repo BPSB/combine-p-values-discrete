@@ -8,7 +8,8 @@ from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorte
 from .pdist import PDist
 
 from scipy.special import erfinv, factorial
-from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact, boschloo_exact
+from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact, boschloo_exact, wilcoxon
+from scipy.stats._morestats import _get_wilcoxon_distr
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
 from scipy.stats._stats_py import _ttest_finish
 from scipy.stats._mstats_basic import _kendall_p_exact
@@ -102,7 +103,7 @@ class CTR(object):
 		Parameters
 		----------
 		x,y
-			The two arrays of paired samples to compare. If `y` is a number, a one-sample sign test is performed with `y` as the median. With `y` as an iterable, the test is two-sided.
+			The two arrays of paired samples to compare. If `y` is a number, a one-sample sign test is performed with `y` as the median. With `y` as an iterable, the two-sample test is performed.
 		
 		alternative: "less" or "greater"
 		"""
@@ -112,6 +113,31 @@ class CTR(object):
 		p,m,_ = sign_test(x,y,alternative)
 		
 		all_ps = list( np.cumsum([math.comb(m,i)/2**m for i in range(m)]) ) + [1]
+		return cls( p, all_ps )
+	
+	@classmethod
+	def wilcoxon_signed_rank( cls, x, y=None, alternative="less" ):
+		"""
+		Creates an object representing the result of a single Wilcoxon signed-rank test.
+		
+		Parameters
+		----------
+		x,y
+			The two arrays of paired samples to compare. If `y` is `None`, the one-sample test is performed, otherwise the two-sample one.
+		
+		alternative: "less" or "greater"
+		"""
+		
+		assert_one_sided(alternative)
+		
+		d = np.asarray(x) - (y or 0)
+		if has_ties(np.abs(d)) or np.any(d==0):
+			raise NotImplementedError("Ties and zeros are not yet implemented.")
+		
+		n = len(x)
+		all_ps = np.cumsum( _get_wilcoxon_distr(n) / 2**n )
+		p = wilcoxon(x,y,alternative=alternative,mode="exact").pvalue
+		
 		return cls( p, all_ps )
 	
 	@classmethod

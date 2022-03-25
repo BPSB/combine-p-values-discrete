@@ -1,7 +1,7 @@
 from pytest import mark, raises
-from itertools import count
+from itertools import count, product
 import numpy as np
-from scipy.stats import mannwhitneyu, spearmanr, kendalltau, fisher_exact, boschloo_exact
+from scipy.stats import mannwhitneyu, wilcoxon, spearmanr, kendalltau, fisher_exact, boschloo_exact
 import math
 
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
@@ -23,6 +23,23 @@ def test_simple_signtest():
 		CTR.sign_test([0],[1],alternative="less")
 		==
 		CTR( 0.5, [0.5,1.0] )
+	)
+
+@mark.parametrize("n",range(3,10))
+def test_simple_wilcoxon(n,rng):
+	data = np.arange(1,n+1)*rng.choice([-1,1],n)
+	
+	wilcoxon_kwargs = dict(alternative="less",mode="exact")
+	control_p = wilcoxon(data,None,**wilcoxon_kwargs).pvalue
+	control_all_ps = list({
+			wilcoxon( np.arange(1,n+1)*signs, **wilcoxon_kwargs ).pvalue
+			for signs in product([-1,1],repeat=n)
+		})
+	
+	assert (
+		CTR.wilcoxon_signed_rank(data,alternative="less")
+		==
+		CTR( control_p, control_all_ps )
 	)
 
 @mark.parametrize(
