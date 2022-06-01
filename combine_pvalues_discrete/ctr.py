@@ -403,7 +403,15 @@ def combine(
 	"""
 	
 	if len(ctrs)==1:
-		return Combined_P_Value(ctrs[0].p,0)
+		p = ctrs[0].p
+		q = ctrs[0].q
+		if alternative=="less":
+			return Combined_P_Value(p,0)
+		elif alternative=="greater":
+			return Combined_P_Value(q,0)
+		elif alternative=="two-sided":
+			p = ctrs[0].p
+			return Combined_P_Value( 2*min(p,q), 0 )
 	
 	if method in (method for method,_ in combining_statistics):
 		if weights is None:
