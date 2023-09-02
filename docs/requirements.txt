@@ -1,3 +1,4 @@
 numpydoc
 setuptools_scm
+matplotlib
 combine_pvalues_discrete
