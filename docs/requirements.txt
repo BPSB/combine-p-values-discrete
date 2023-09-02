@@ -1,2 +1,3 @@
 numpydoc
 setuptools_scm
+combine_pvalues_discrete
