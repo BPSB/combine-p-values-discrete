@@ -191,7 +191,7 @@ Supported Tests
 
 Currently, this module supports:
 
-* the sign test,
+* the sign test and Wilocoxon’s signed rank test,
 * the Mann–Whitney *U* test,
 * Fisher’s and Boschloo’s exact tests,
 * Spearman’s ρ and Kendall’s τ,
