@@ -135,7 +135,7 @@ class CTR(object):
 			raise NotImplementedError("Ties and zeros are not yet implemented.")
 		
 		n = len(x)
-		all_ps = np.cumsum( _get_wilcoxon_distr(n) / 2**n )
+		all_ps = np.cumsum( _get_wilcoxon_distr(n) )
 		p = wilcoxon(x,y,alternative=alternative,mode="exact").pvalue
 		
 		return cls( p, all_ps )
