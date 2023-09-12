@@ -336,6 +336,20 @@ def apply_statistics(statistic,data,alternative="less"):
 	else:
 		raise ValueError('Alternative must be "less", "greater", or "two-sided".')
 
+def get_statistic(method,weights):
+	if method in (method for method,_ in combining_statistics):
+		if weights is None:
+			return combining_statistics[method,"normal"]
+		else:
+			try:
+				return combining_statistics[method,"weighted"]
+			except KeyError:
+				raise ValueError(f'No weighted version of "{method}" method')
+	else:
+		if not callable(method):
+			raise ValueError(f'Method "{method}" is neither known nor callable.')
+		return method
+
 def combine(
 		ctrs, weights=None,
 		method="mudholkar_george", alternative="less",
@@ -370,7 +384,7 @@ def combine(
 		
 		* If "less", the compound research hypothesis is that the subtests exhibit a trend towards a low *p* value.
 		* If "greater", the compound research hypothesis is that the subtests exhibit a trend towards high *p* values (close to 1). In this case, the method of choice will be applied to the complements of the *p* values (see `complements`).
-		* If "two-sided", the compound research hypothesis is that the subtests exhibit either of the two above trends. Beware that this is not necessarily the same as just doubling the *p* value of the respective one-sided test, since for some combining method, a compound dataset may exhibit **both** trends.
+		* If "two-sided", the compound research hypothesis is that the subtests exhibit either of the two above trends. Beware that this is not necessarily the same as just doubling the *p* value of the respective one-sided test, since for some combining methods, a compound dataset may exhibit **both** trends.
 	
 	weights: iterable of numbers
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
@@ -410,21 +424,9 @@ def combine(
 		elif alternative=="greater":
 			return Combined_P_Value(q,0)
 		elif alternative=="two-sided":
-			p = ctrs[0].p
 			return Combined_P_Value( 2*min(p,q), 0 )
 	
-	if method in (method for method,_ in combining_statistics):
-		if weights is None:
-			statistic = combining_statistics[method,"normal"]
-		else:
-			try:
-				statistic = combining_statistics[method,"weighted"]
-			except KeyError:
-				raise ValueError(f'No weighted version of "{method}" method')
-	else:
-		if not callable(method):
-			raise ValueError(f'Method "{method}" is neither known nor callable.')
-		statistic = method
+	statistic = get_statistic(method,weights)
 	
 	required_args = set(signature(statistic).parameters)
 	if alternative == "greater":
@@ -461,3 +463,47 @@ def combine(
 		null_stats = apply_statistics(statistic,data_null,alternative=alternative)
 	
 	return counted_p( orig_stat, null_stats, rtol=rtol, atol=atol )
+
+def direction( ctrs, weights=None, method="mudholkar_george" ):
+	"""
+	A service function to indicate whether the `ctrs` are rather trending towards high or low *p* values.
+	
+	If you are combining two-sidedly, this tells you the direction of the strongest trend, whether it’s significant or not (that’s what `combine` is for). Beware that for some methods such as Fisher’s, a compound dataset may exhibit a significant trend in **both** directions and this function won’t tell you. This cannot happen for symmetric methods (Mudholkar–George, Stouffer, and Edgington symmetrised).
+	
+	Parameters
+	----------
+	As for `combine`.
+	
+	Returns
+	-------
+	direction: string
+		One of "less", "greater" or "equal". The latter is only returned if the statistics of the combining method are exactly equal in either direction.
+	"""
+	
+	if len(ctrs)==1:
+		stats = { "less": ctrs[0].p, "greater": ctrs[0].q }
+	else:
+		statistic = get_statistic(method,weights)
+		
+		data_orig = {
+				x : np.array([getattr(ctr,x) for ctr in ctrs])
+				for x in ["p","q"]
+			}
+		
+		if weights is not None:
+			data_orig["w"] = np.asarray(weights)
+		
+		err_kwargs = {"divide":"ignore","invalid":"ignore"} if (method in statistics_with_inf) else {}
+		with np.errstate(**err_kwargs):
+			stats = {
+				case: apply_statistics(statistic,data_orig,alternative=case)
+				for case in ["less","greater"]
+			}
+	
+	if stats["less"] < stats["greater"]:
+		return "less"
+	elif stats["greater"] < stats["less"]:
+		return "greater"
+	else:
+		return "equal"
+
