@@ -19,9 +19,9 @@ Our data looks like this:
 
 Each pair represents one breed, with the first half being the control group and the second the treatment group.
 If our drug works as desired, the second half should exhibit higher values.
-Finally, due to the nature of our observable, we only want to use a ranked statistics.
+Finally let’s assume that due to the nature of our observable, we only want to use a ranked statistics.
 
-Thus, we want to investigate the null hypothesis that for each sub-dataset, both samples are from the same distribution (or more precisely, the null hypothesis of the Mann–Whitney *U* test).
+Thus, we want to investigate the null hypothesis that for each sub-dataset, both samples are from the same distribution (or more precisely, they fulfil the null hypothesis of the Mann–Whitney *U* test).
 The alternative hypothesis is that that the first pair of samples are from a distribution with a lower median.
 
 First, suppose we discard our information on breeds and pool the control and treatment groups.
@@ -57,7 +57,8 @@ Finally, by using this module, we can take into account the discreteness of test
 	:dedent: 1
 	:lines: 40-44
 
-(We here use Fisher’s method, since it simplifies the following demonstration. In general, I don’t recommend it.)
+We here use Fisher’s method, since it simplifies the following demonstration.
+See `method_choice` as to how this affects our results and their interpretation.
 
 Checking the result
 ```````````````````

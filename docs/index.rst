@@ -29,7 +29,7 @@ This module has a scope similar to SciPy’s `combine_pvalues`_:
 * There is no straightforward test to apply to the entire dataset.
 * You want a single *p* value for the null hypothesis taking into account the entire dataset, i.e., you want to combine your test results for the sub-datasets.
 
-**However,** `combine_pvalues` assumes that the individual tests are continuous (see below for a definition), while applying it to discrete tests will yield a systematically wrong combined *p* value.
+**However,** SciPy’s `combine_pvalues` assumes that the individual tests are continuous (see below for a definition), and applying it to discrete tests will yield a systematically wrong combined *p* value.
 For example, for `Fisher’s method`_ it systematically overestimates the *p* value, i.e., you may falsely accept the null hypothesis (false negative).
 This module addresses this and thus you should consider it if:
 
@@ -61,8 +61,8 @@ Moreover, they contain tests of bound integer data.
 The most relevant **discrete tests** are:
 
 * the sign test,
-* the Mann–Whitney *U* test,
 * Wilcoxon’s signed rank test,
+* the Mann–Whitney *U* test,
 * any test based on a ranked correlation such as Kendall’s *τ* and Spearman’s *ρ*,
 * Boschloo’s exact test and any other test for integer contingency tables.
 
@@ -147,7 +147,7 @@ They are listed together with their test statistics – with :math:`p_i` being 
 
 * Fisher: :math:`\prod\limits_i p_i`
 * Pearson: :math:`\prod\limits_i q_i^{-1}`
-* Mudholkhar and George: :math:`\prod\limits_i \frac{p_i}{q_i}`
+* Mudholkar and George (default): :math:`\prod\limits_i \frac{p_i}{q_i}`
 * Edgington: :math:`\sum\limits_i p_i` and Edgington symmetrised: :math:`\sum\limits_i p_i+1-q_i` (see below as to why you may want this)
 * Stouffer: :math:`\sum\limits_i \Phi^{-1} (p_i)`, where :math:`\Phi` is the CDF of the standard normal distribution.
 * Simes: :math:`\min\limits_i \left( \frac{p_i}{R(p_i)} \right)`, where :math:`R(p_i)` is the rank of :math:`p_i` amongst all combined *p* values.
@@ -157,11 +157,14 @@ Weighted variants exist for all but the latter two (for which they do not make s
 
 Note that we use different, but equivalent statistics internally for numerical reasons.
 
+.. _method_choice:
 
-Why is the default combining method Mudholkar’s and George’s?
-`````````````````````````````````````````````````````````````
+Choosing a combining method
+```````````````````````````
 
-I assume here that you want to investigate the research hypothesis that all datasets are subject to the same trend.
+Mudholkar’s and George’s method being the default is based on the assumption that the research hypothesis is that **all datasets are subject to the same trend**.
+In `comparison`, this corresponds to the drug being beneficial to dogs in general.
+
 The trend may manifest more clearly in some of the datasets (and you don’t know which a priori), but it should not be inverted (other than by chance).
 In this case, you would perform one-sided sub-tests.
 (If you would consider both directions of trend a finding, the combination needs to be two-sided, not the sub-tests.)
@@ -183,8 +186,13 @@ Of the supported methods, only three fulfil this:
 * Edgington’s symmetrised method, which does not give extreme *p* values the emphasis they deserve (in my humble opinion), e.g., a *p* value changing from 0.1 to 0.001 has the same effect as one changing from 0.5 to 0.401.
 * Mudholkar’s and George’s method, which puts emphasis on extreme *p* values, i.e., close to 0 or 1.
 
-I therefore prefer the latter.
+I therefore prefer the latter in this case.
 
+This changes if your research hypothesis is that **some datasets exhibit a given trend**.
+In the dog example, this corresponds to the research hypothesis that the drug is beneficial to some dog breeds, while it may be harmful to others.
+In this case, a method emphasising low *p* values is more appropriate, e.g., Fisher’s.
+
+For other research hypotheses, you have yet other considerations and appropriate methods.
 
 Supported Tests
 ---------------
