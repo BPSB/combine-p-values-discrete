@@ -213,7 +213,7 @@ Command reference
 -----------------
 
 .. automodule:: combine_pvalues_discrete
-	:members: CTR, combine, sign_test
+	:members: CTR, combine, direction, sign_test
 
 .. _combine_pvalues: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.combine_pvalues.html
 

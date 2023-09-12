@@ -1,4 +1,4 @@
-from .ctr import CTR, combine
+from .ctr import CTR, combine, direction
 from .tools import sign_test
 
 try:
