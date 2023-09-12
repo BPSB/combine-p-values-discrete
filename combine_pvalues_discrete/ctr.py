@@ -305,7 +305,7 @@ combining_statistics = {
 	("mudholkar_george","weighted"): lambda p,q,w:  w.dot(np.log(p/q))   ,
 	("stouffer"        ,"weighted"): lambda p,w:    w.dot(erfinv(2*p-1)) ,
 	("edgington"       ,"weighted"): lambda p,w:    w.dot(p)             ,
-	("edgington_sym"   ,"weighted"): lambda p,q,w:  w.dot(p+1-q)           ,
+	("edgington_sym"   ,"weighted"): lambda p,q,w:  w.dot(p+1-q)         ,
 }
 
 statistics_with_inf = {"stouffer"}
