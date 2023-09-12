@@ -121,8 +121,7 @@ def emulate_continuous_combine_ps(ps,**kwargs):
 	ctrs = [ CTR(p) for p in ps ]
 	return combine(ctrs,n_samples=n_samples,**kwargs).pvalue
 
-# Cannot compare with Pearson’s and Tippett’s method due to SciPy Issue #15373
-@mark.parametrize( "method", ["fisher","mudholkar_george","stouffer"] )
+@mark.parametrize( "method", ["fisher","mudholkar_george","stouffer","pearson", "tippett"] )
 @mark.parametrize( "n", range(2,17,4) )
 @mark.parametrize( "magnitude", ["small","normal"] )
 @mark.parametrize("sampling_method",["proportional","stochastic"])
