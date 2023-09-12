@@ -370,7 +370,7 @@ def combine(
 		
 		* If "less", the compound research hypothesis is that the subtests exhibit a trend towards a low *p* value.
 		* If "greater", the compound research hypothesis is that the subtests exhibit a trend towards high *p* values (close to 1). In this case, the method of choice will be applied to the complements of the *p* values (see `complements`).
-		* If "two-sided", the compound research hypothesis is that the subtests exhibit either of the two above trends.
+		* If "two-sided", the compound research hypothesis is that the subtests exhibit either of the two above trends. Beware that this is not necessarily the same as just doubling the *p* value of the respective one-sided test, since for some combining method, a compound dataset may exhibit **both** trends.
 	
 	weights: iterable of numbers
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
@@ -442,11 +442,10 @@ def combine(
 			# target[:] to overwrite the content of target instead of reassigning the variable.
 			target_p[:],target_q[:] = ctr.nulldist.sample_both(**sampling_kwargs)
 	else:
-		for x in ["p","q"]:
-			if x in required_args:
-				data_null[x] = np.empty((len(ctrs),n_samples))
-				for ctr,target in zip(ctrs,data_null[x]):
-					target[:] = ctr.nulldist.sample(which=x,**sampling_kwargs)
+		for x in {"p","q"} & required_args:
+			data_null[x] = np.empty((len(ctrs),n_samples))
+			for ctr,target in zip(ctrs,data_null[x]):
+				target[:] = ctr.nulldist.sample(which=x,**sampling_kwargs)
 	
 	data_orig = {
 			x : np.array([getattr(ctr,x) for ctr in ctrs])
@@ -462,4 +461,3 @@ def combine(
 		null_stats = apply_statistics(statistic,data_null,alternative=alternative)
 	
 	return counted_p( orig_stat, null_stats, rtol=rtol, atol=atol )
-
