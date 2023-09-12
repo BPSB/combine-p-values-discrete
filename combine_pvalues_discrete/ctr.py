@@ -468,7 +468,7 @@ def direction( ctrs, weights=None, method="mudholkar_george" ):
 	"""
 	A service function to indicate whether the `ctrs` are rather trending towards high or low *p* values.
 	
-	If you are combining two-sidedly, this tells you the direction of the strongest trend, whether it’s significant or not (that’s what `combine` is for). Beware that for some methods such as Fisher’s, a compound dataset may exhibit a significant trend in **both** directions and this function won’t tell you. This cannot happen for symmetric methods (Mudholkar–George, Stouffer, and Edgington symmetrised).
+	If you are combining two-sidedly, this tells you the direction of the strongest trend, whether it’s significant or not (that’s what `combine` is for). Beware that for some methods such as Fisher’s, a compound dataset may exhibit a significant trend in **both** directions and this function won’t tell you. This cannot happen for symmetric methods (Mudholkar–George, Stouffer, and symmetrised Edgington).
 	
 	Parameters
 	----------
