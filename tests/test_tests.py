@@ -153,6 +153,8 @@ def test_simple_boschloo():
 
 # -----------------
 
+# What follows are extensive simulations checking the null distributions of the combined p values as well as comparing the combined p values with those obtained by extensive null models. We first prepare utility functions for two tests (sign test and MWU test). We use Fisher’s method, hence the sums of logarithms of p values (logp_sum).
+
 def mwu_combine( data, **kwargs ):
 	ctrs = [ CTR.mann_whitney_u(X,Y,alternative="less") for X,Y in data ]
 	return combine(ctrs,**kwargs).pvalue
