@@ -424,7 +424,7 @@ def combine(
 		elif alternative=="greater":
 			return Combined_P_Value(q,0)
 		elif alternative=="two-sided":
-			return Combined_P_Value( 2*min(p,q), 0 )
+			return Combined_P_Value( 1-(1-min(p,q))**2, 0 )
 	
 	statistic = get_statistic(method,weights)
 	

@@ -16,10 +16,12 @@ n_samples = 10000
 	[
 	  ( 0.01, "less"     , 0.01   ),
 	  ( 0.01, "greater"  , 0.99   ),
-	  ( 0.01, "two-sided", 0.02   ),
+	  ( 0.01, "two-sided", 0.0199 ),
+	  ( 0.4 , "two-sided", 0.64   ),
 	  ( 0.99, "less"     , 0.99   ),
 	  ( 0.99, "greater"  , 0.01   ),
-	  ( 0.99, "two-sided", 0.02   ),
+	  ( 0.99, "two-sided", 0.0199 ),
+	  ( 0.6 , "two-sided", 0.64   ),
 	])
 def test_single_p(p,alternative,result):
 	assert np.isclose(
