@@ -127,7 +127,7 @@ def test_std_counted_p(rng):
 			np.mean(estimated_ps,axis=0),
 			true_ps,
 			n=n,
-			factor = 3/np.sqrt(m)
+			threshold=1e-3,
 		)
 	np.testing.assert_allclose( stds, control, rtol=3/np.sqrt(m) )
 	np.testing.assert_allclose( stds[:-1], np.mean(estimated_stds,axis=0)[:-1], rtol=3/np.sqrt(m) )
@@ -136,20 +136,18 @@ def test_std_counted_p(rng):
 @mark.parametrize("size",range(10,100,10))
 @mark.parametrize("n_values",range(2,10))
 def test_assert_discrete_uniform(size,n_values,rng):
-	not_too_low = rng.uniform(0.1,1)
-	values = sorted( np.hstack(( rng.random(n_values-2), [not_too_low,1] )) )
+	moderate_value = rng.uniform(0.3,0.7)
+	values = sorted( np.hstack(( rng.random(n_values-2), [moderate_value,1] )) )
 	probs = np.diff(values,prepend=0)
 	data = rng.choice( values, p=probs, size=size, replace=True )
-	assert_discrete_uniform(data)
+	assert_discrete_uniform(data,threshold=1e-4)
 
 def test_assert_discrete_uniform_perfect():
 	data = [ 0.1, 0.3, 0.3, 0.7, 0.7, 0.7, 0.7, 1.0, 1.0, 1.0 ]
-	assert_discrete_uniform(data,factor=1)
+	assert_discrete_uniform(data,threshold=0.5)
 
 def test_assert_discrete_uniform_fail():
 	data = [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7 ]
 	with raises(AssertionError):
 		assert_discrete_uniform(data)
-
-
 

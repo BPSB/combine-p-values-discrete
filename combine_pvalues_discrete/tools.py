@@ -1,6 +1,6 @@
 from collections import namedtuple
 import numpy as np
-from scipy.stats import binomtest, kstwo
+from scipy.stats import binomtest, kstwo, boschloo_exact, fisher_exact
 
 def is_empty(x):
 	try:
@@ -103,7 +103,7 @@ def std_from_true_p(true_p,size):
 	"""
 	return np.sqrt(true_p*(1-true_p)*size)/(size+1)
 
-def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
+def assert_matching_p_values_old(p,target_p,n,factor=3,compare=False):
 	"""
 	Asserts that `p` (estimated with `counted_p`) matches `target_p` when estimated from `n` samples of the null model.
 	
@@ -114,9 +114,9 @@ def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 	p = np.atleast_1d(p)
 	
 	# Correction because the p value is estimated conservatively and, e.g., can never be below 1/(n+1):
-	size_offset = (1-target_p)/(n+1)
+	size_offset = np.maximum(target_p,1-target_p)/(n+1)
 	
-	diffs = np.abs( target_p - p + (0 if compare else size_offset) )
+	diffs = np.abs( target_p - p ) - size_offset
 	
 	reference_p = (p+target_p)/2 if compare else target_p
 	with np.errstate(invalid="ignore",divide="ignore"):
@@ -136,7 +136,59 @@ def assert_matching_p_values(p,target_p,n,factor=3,compare=False):
 				difference / std: {ratios[i]} > {factor}
 			""")
 
-def assert_discrete_uniform(data,factor=3):
+def assert_matching_p_values(tested_ps,target_ps,n,threshold=1e-4,compare=False):
+	"""
+	Asserts that `ps` (estimated with `counted_p`) matches `target_ps` when estimated from `n` samples of the null model using the binomial test.
+	
+	`threshold` is the maximal *p* value of that binomial test.
+	
+	If `target_ps` is not exact but estimated by sampling as well (with the same `n`), set `compare=True`. In this case, Boschloo’s or Fisher’s exact test is used for comparison, with the latter being used for n>10 because it’s considerably faster, though less accurate. If the sample sizes are different, `n` needs to be a pair.
+	"""
+	
+	tested_ps = np.atleast_1d(tested_ps)
+	assert tested_ps.ndim == 1
+	assert np.all(tested_ps<=1)
+	assert np.all(0<=tested_ps)
+	
+	if np.ndim(target_ps)==0:
+		target_ps = np.full_like(tested_ps,target_ps)
+	
+	if compare:
+		for i,ps in enumerate(zip(tested_ps,target_ps)):
+			ns = [n,n] if np.ndim(n) == 0 else n
+			
+			# If you wonder why we are reconstructing the ks here: It’s because we are mostly testing functions that return p values, not ks and ns.
+			ks = [ round(p*(n+1)-1) for p,n in zip(ps,ns) ]
+			comparison_test = boschloo_exact if max(ns)<=10 else fisher_exact
+			comparison_p = comparison_test([
+					ks,
+					[n-k for k,n in zip(ks,ns)],
+				]).pvalue
+			if comparison_p < threshold:
+				ratios = [f"{p} = ({k}+1)/({n}+1)" for p,n,k in zip(ps,ns,ks)]
+				raise AssertionError(
+					f"""
+					p values don’t match.
+						ratios[0] ≉ ratios[1]
+						p value of {comparison_test.name}: {comparison_p}
+					""")
+	else:
+		for i,(tested_p,target_p) in enumerate(zip(tested_ps,target_ps)):
+			assert np.ndim(n) == 0
+			k = round(tested_p*(n+1)-1)
+			binomtest_p = binomtest(k,n,target_p).pvalue
+			if binomtest_p < threshold:
+				raise AssertionError(
+					f"""
+					p values don’t match.
+						{tested_p} = ({k}+1)/({n}+1) ≉ {target_p}
+						p value of binomial test: {binomtest_p}
+					""")
+
+def assert_discrete_uniform(data,threshold=1e-4):
+	"""
+	Checks whether `data` complies with a discrete uniform distribution on the interval [0,1]. `threshold` is the maximum *p* value of the binomial test used under the hood.
+	"""
 	data = np.asarray(data)
 	n = len(data)
 	values = set(data)
@@ -148,7 +200,7 @@ def assert_discrete_uniform(data,factor=3):
 				count_greater_or_close(value,data,atol=1e-15,rtol=1e-15)/n,
 				value,
 				n = n,
-				factor = factor,
+				threshold = threshold,
 				compare = False
 			)
 

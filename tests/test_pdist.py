@@ -70,7 +70,7 @@ def test_sampling_complement(n_ps,n_samples,method,rng):
 		for p,prob in zip(dist,dist.probs):
 			q = dist.complement(p)
 			assert np.isclose( np.average(sample==q), prob, atol=3/np.sqrt(n_samples) )
-			assert_matching_p_values( np.average(sample<=q), q, n_samples, factor=4 )
+			assert_matching_p_values( np.average(sample<=q), q, n_samples )
 	else:
 		dist = PDist([])
 		sample = dist.sample_complement(RNG=rng,size=n_samples,method=method)

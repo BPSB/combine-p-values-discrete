@@ -80,11 +80,13 @@ def test_commutativity_and_associativity(combo,method,variant,sampling_method,al
 	weights = weights[new_order] if variant=="weighted" else None
 	result_2 = get_p(combo,weights)
 	
+	print(combo,weights,result_1,result_2)
+	
 	assert_matching_p_values(
 			result_1,
 			result_2,
 			n_samples,
-			factor = 3.5 if sampling_method=="proportional" else 4,
+			compare = True,
 		)
 
 @mark.parametrize("example",examples)
@@ -139,7 +141,6 @@ def test_compare_with_combine_pvalues(n,method,magnitude,sampling_method,rng):
 		),
 		combine_pvalues(ps,method=method)[1],
 		n_samples,
-		factor = 3 if sampling_method=="proportional" else 4,
 	)
 
 @mark.parametrize( "n", range(2,15) )
@@ -159,7 +160,6 @@ def test_compare_with_combine_pvalues_weighted(n,magnitude,sampling_method,rng):
 		),
 		combine_pvalues(ps,method="stouffer",weights=weights)[1],
 		n_samples,
-		factor = 3 if sampling_method=="proportional" else 4,
 	)
 
 @mark.parametrize("method,variant",combining_statistics)
@@ -269,7 +269,7 @@ def test_identical_weights(method,sampling_method,alt,rng):
 		)
 		for w in [weights,None]
 	]
-	assert_matching_p_values(*results,n=n_samples,factor=4,compare=True)
+	assert_matching_p_values(*results,n=n_samples,compare=True)
 
 @mark.parametrize("method,variant",combining_statistics)
 def test_less_greater_symmetry(method,variant,rng):

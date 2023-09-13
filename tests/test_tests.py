@@ -1,11 +1,20 @@
 from pytest import mark, raises
 from itertools import count, product
 import numpy as np
-from scipy.stats import mannwhitneyu, wilcoxon, spearmanr, kendalltau, fisher_exact, boschloo_exact
+from scipy.stats import (
+		mannwhitneyu,
+		wilcoxon,
+		spearmanr, kendalltau,
+		fisher_exact, boschloo_exact,
+	)
 import math
 
 from combine_pvalues_discrete.ctr import CTR, combine, combining_statistics
-from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values, assert_discrete_uniform
+from combine_pvalues_discrete.tools import (
+		sign_test,
+		counted_p,
+		assert_matching_p_values, assert_discrete_uniform,
+	)
 
 n_samples = 100000
 
@@ -98,15 +107,15 @@ def test_spearman(n,rng):
 	
 	x,y = spearman_data(RNG=rng,n=n,trend=0.8)
 	orig_ρ = spearmanr(x,y).correlation
-
+	
 	null_ρs = np.array([
 			spearmanr(*spearman_data(RNG=rng,n=n)).correlation
 			for _ in range(m)
 		])
 	
 	assert_matching_p_values(
-			np.average( orig_ρ <= null_ρs ),
-			CTR.spearmanr(x,y,alternative="greater").p,
+			counted_p( orig_ρ, null_ρs ).pvalue,
+			CTR.spearmanr(x,y,alternative="less").p,
 			n = m,
 		)
 
@@ -218,7 +227,7 @@ def test_null_distribution(method,variant,test,sampling_method,alt,rng):
 		for _ in range(30)
 	]
 	
-	assert_discrete_uniform( p_values, factor=4.1 )
+	assert_discrete_uniform(p_values)
 
 def create_surrogate(RNG,pairs):
 	"""
@@ -259,12 +268,12 @@ def test_compare_with_surrogates(trend,test,sampling_method,alt,rng):
 		evaluate( create_surrogate(rng,dataset) )
 		for _ in range(n)
 	]
-	p_from_surrogates = np.average( original_logp_sum >= surrogate_logp_sums )
+	p_from_surrogates = counted_p( original_logp_sum, surrogate_logp_sums ).pvalue
 	
 	assert_matching_p_values(
-			p_from_surrogates,
 			p_from_combine,
-			n = min(n_samples,n),
-			factor=3.3, compare=True,
+			p_from_surrogates,
+			n = (n_samples,n),
+			compare=True,
 		)
 
