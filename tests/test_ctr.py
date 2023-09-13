@@ -11,23 +11,33 @@ from combine_pvalues_discrete.tools import sign_test, assert_matching_p_values
 
 n_samples = 10000
 
+examples = [
+	CTR( 0.5, [0.5,      1] ),
+	CTR( 1.0, [0.5,      1] ),
+	CTR( 0.3, [0.3, 0.5, 1] ),
+	CTR( 0.7, [0.2, 0.7, 1] ),
+]
+
 @mark.parametrize(
 	  "  p  , alternative, result",
 	[
 	  ( 0.01, "less"     , 0.01   ),
 	  ( 0.01, "greater"  , 0.99   ),
-	  ( 0.01, "two-sided", 0.0199 ),
-	  ( 0.4 , "two-sided", 0.64   ),
+	  ( 0.01, "two-sided", 0.02   ),
+	  ( 0.4 , "two-sided", 0.8    ),
 	  ( 0.99, "less"     , 0.99   ),
 	  ( 0.99, "greater"  , 0.01   ),
-	  ( 0.99, "two-sided", 0.0199 ),
-	  ( 0.6 , "two-sided", 0.64   ),
+	  ( 0.99, "two-sided", 0.02   ),
+	  ( 0.6 , "two-sided", 0.8    ),
 	])
 def test_single_p(p,alternative,result):
 	assert np.isclose(
 			combine([CTR(p)],alternative=alternative).pvalue,
 			result
 		)
+
+def test_single_p_extreme():
+	assert combine([examples[3]],alternative="two-sided").pvalue == 1
 
 def test_assert_one_sided_good():
 	assert_one_sided("less")
@@ -41,13 +51,6 @@ def test_assert_one_sided_bad(bad_input):
 def test_zero_p():
 	with raises(ValueError):
 		CTR( 0, [0,1,2,3] ),
-
-examples = [
-	CTR( 0.5, [0.5,      1] ),
-	CTR( 1.0, [0.5,      1] ),
-	CTR( 0.3, [0.3, 0.5, 1] ),
-	CTR( 0.7, [0.2, 0.7, 1] ),
-]
 
 @mark.parametrize(
 		"combo",
