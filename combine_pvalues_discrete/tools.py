@@ -123,7 +123,7 @@ def assert_matching_p_values(tested_ps,target_ps,n,threshold=1e-4,compare=False)
 					f"""
 					p values don’t match.
 						ratios[0] ≉ ratios[1]
-						p value of {comparison_test.name}: {comparison_p}
+						p value of {comparison_test.__name__}: {comparison_p}
 					""")
 	else:
 		for i,(tested_p,target_p) in enumerate(zip(tested_ps,target_ps)):

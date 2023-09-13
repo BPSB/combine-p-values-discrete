@@ -131,6 +131,24 @@ def test_std_counted_p(rng):
 	np.testing.assert_allclose( true_stds[:-1], np.mean(estimated_stds,axis=0)[:-1], rtol=3/np.sqrt(m) )
 	# Last element is expected to be unequal, because the estimate cannot reasonably be zero.
 
+def test_assert_matching_p_values_one_sample():
+	assert_matching_p_values(0.04,0.05,n=30)
+	assert_matching_p_values([0.04,0.051,0.048],0.05,n=30)
+	assert_matching_p_values([0.04,0.061,0.02],[0.05,0.06,0.02],n=30)
+	with raises(AssertionError):
+		assert_matching_p_values([0.047,0.061,0.02],[0.05,0.01,0.02],n=300)
+
+def test_assert_matching_p_values_two_sample():
+	assert_matching_p_values(0.04,0.05,n=30,compare=True)
+	assert_matching_p_values([0.04,0.051,0.048],0.05,n=30,compare=True)
+	assert_matching_p_values([0.04,0.061,0.02],[0.05,0.06,0.02],n=(30,40),compare=True)
+	with raises(AssertionError):
+		assert_matching_p_values([0.047,0.061,0.02],[0.05,0.01,0.02],n=3000,compare=True)
+	with raises(AssertionError):
+		assert_matching_p_values(0.1,0.9,n=10,compare=True)
+
+
+
 @mark.parametrize("size",range(10,100,10))
 @mark.parametrize("n_values",range(2,10))
 def test_assert_discrete_uniform(size,n_values,rng):
