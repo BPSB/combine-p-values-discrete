@@ -218,11 +218,11 @@ def test_null_distribution(method,variant,test,sampling_method,alt,rng):
 			alternative = alt,
 			RNG = rng,
 			method = method,
-			n_samples = 10000,
+			n_samples = 1000,
 			sampling_method = sampling_method,
 			weights = rng.random(n) if variant=="weighted" else None
 		)
-		for _ in range(30)
+		for _ in range(50)
 	]
 	
 	assert_discrete_uniform(p_values)
