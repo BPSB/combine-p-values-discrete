@@ -41,7 +41,7 @@ def sign_test(x,y=0,alternative="less"):
 	**one-sided**
 	Pass a single sample `x` and a number `y`. The tested null hypothesis is that `x` is sampled from a distribution with a median larger than `y`.
 	
-	Returns a tuple consisting of the p value and the number of non-tied samples.
+	Returns a named tuple consisting of the p value, the number of non-tied samples, and the statistic of the sign test (number of samples which are greater than the reference).
 	"""
 	
 	x = np.asarray(x)

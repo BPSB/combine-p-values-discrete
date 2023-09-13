@@ -48,16 +48,17 @@ def test_has_ties(argument,result):
 
 @mark.parametrize("n",range(1,20))
 def test_signtest_with_statsmodels(n):
+	# sm: from statsmodels
 	X = np.random.normal(size=n)
 	
 	p = sign_test(X,alternative="two-sided")[0]
 	p_sm = sm_sign_test(X)[1]
 	
 	Y = np.random.normal(n)
-	p_2s = sign_test(X+Y,Y,alternative="two-sided")[0]
+	p_2sample = sign_test(X+Y,Y,alternative="two-sided")[0]
 	
 	assert np.isclose(p,p_sm)
-	assert p == p_2s
+	assert p == p_2sample
 
 @mark.parametrize("n",range(1,20))
 def test_signtest_with_statsmodels_onesided(n):
@@ -73,13 +74,13 @@ def test_signtest_with_statsmodels_onesided(n):
 	p_sm = sm_sign_test(X)[1]/2
 
 	Y = np.random.normal(n)
-	p_2s = sign_test(X+Y,Y,alternative="less")[0]
+	p_2sample = sign_test(X+Y,Y,alternative="less")[0]
 
 	assert np.isclose(p,p_sm)
-	assert p == p_2s
+	assert p == p_2sample
 
-def test_signtest_order():
-	n = 20
+@mark.parametrize("n",range(1,20))
+def test_signtest_best_case(n):
 	X = np.zeros(n)
 	Y = np.ones(n)
 	assert np.isclose( sign_test(X,Y,alternative="less")[0], 2**-n )
