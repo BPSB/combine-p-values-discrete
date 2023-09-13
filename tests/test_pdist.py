@@ -1,10 +1,24 @@
 from pytest import mark, raises
 import numpy as np
-from scipy.stats import uniform, ks_1samp
+from scipy.stats import uniform, ks_1samp, binomtest
 from itertools import combinations
 
-from combine_pvalues_discrete.pdist import PDist
+from combine_pvalues_discrete.pdist import PDist, sample_discrete
 from combine_pvalues_discrete.tools import assert_matching_p_values
+
+@mark.parametrize("method",("stochastic","proportional"))
+def test_sample_discrete(method,rng):
+	m = 10
+	n = 100000
+	values = range(m)
+	frequencies = rng.uniform(0,1,size=m)
+	frequencies /= np.sum(frequencies)
+	
+	result = sample_discrete(values,frequencies,RNG=rng,size=n)
+	for value,frequency in zip(values,frequencies):
+		count = np.sum(result==value)
+		assert binomtest(count,n,frequency).pvalue>1e-3
+
 
 def test_core_stuff():
 	dists = ( PDist([]), PDist([1]), PDist([0.5,1]) )
