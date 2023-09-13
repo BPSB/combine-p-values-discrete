@@ -15,6 +15,7 @@ def sample_discrete(values,frequencies,RNG=None,size=10000000,method="proportion
 		return RNG.choice( values, p=frequencies, size=size, replace=True )
 	elif method=="proportional":
 		combos = list(zip(values,frequencies))
+		# Shuffling to randomise the effect of rounding errors:
 		RNG.shuffle(combos)
 		result = np.empty(size)
 		start = 0
@@ -70,6 +71,7 @@ class PDist(object):
 			if self.ps[-1]>=1+1e-10 and len(self.ps)>1 and self.ps[-2]>=1:
 				raise ValueError("Two p values slightly larger than or equal to 1.")
 			
+			# Get rid of any numerical inaccuracies:
 			self.ps[-1] = 1
 	
 	@property
@@ -91,13 +93,16 @@ class PDist(object):
 			return f"PDist( {points} )"
 	
 	def __eq__(self,other):
-		return self.approx(other,tol=0)
+		return self.approx(other,atol=0)
 	
-	def approx(self,other,tol=1e-14):
+	def approx(self,other,atol=1e-14):
+		"""
+		Whether this distribution is identical to another with in an absolute torlerance `atol between *p* values.
+		"""
 		if self.continuous:
 			return other.continuous
 		else:
-			return all( abs(p1-p2)<=tol for p1,p2 in zip(self,other) )
+			return all( abs(p1-p2)<=atol for p1,p2 in zip(self,other) )
 	
 	def sample(self,which="p",**kwargs):
 		"""
