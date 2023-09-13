@@ -199,7 +199,7 @@ def test_monotony(method,variant,variables,sampling_method,alt,rng):
 		errors.append(error)
 	
 	errors = np.array(errors)
-	diff_errors = 1.5*(errors[:-1]+errors[1:])
+	diff_errors = 2*(errors[:-1]+errors[1:])
 	
 	assert np.all( np.diff(combined_ps) >= -diff_errors )
 

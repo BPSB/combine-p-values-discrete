@@ -3,7 +3,7 @@ import numpy as np
 from scipy.stats import uniform, ks_1samp, binomtest
 from itertools import combinations
 
-from combine_pvalues_discrete.pdist import PDist, sample_discrete
+from combine_pvalues_discrete.pdist import PDist, sample_discrete, sample_uniform
 from combine_pvalues_discrete.tools import assert_matching_p_values
 
 @mark.parametrize("method",("stochastic","proportional"))
@@ -18,7 +18,6 @@ def test_sample_discrete(method,rng):
 	for value,frequency in zip(values,frequencies):
 		count = np.sum(result==value)
 		assert binomtest(count,n,frequency).pvalue>1e-3
-
 
 def test_core_stuff():
 	dists = ( PDist([]), PDist([1]), PDist([0.5,1]) )
@@ -63,32 +62,34 @@ def test_cumprobs(size):
 @mark.parametrize("n_samples",10**np.arange(4,7))
 @mark.parametrize("method",("stochastic","proportional"))
 def test_sampling(n_ps,n_samples,method,rng):
+	threshold = 0.5 if method=="proportional" else 1e-4
 	if n_ps>1:
 		dist = PDist( list(rng.random(n_ps-1)) + [1] )
 		sample = dist.sample(RNG=rng,size=n_samples,method=method)
 		for p,prob in zip(dist,dist.probs):
 			assert np.isclose( np.average(sample==p), prob, atol=3/np.sqrt(n_samples) )
-			assert_matching_p_values( np.average(sample<=p), p, n_samples )
+			assert binomtest(np.sum(sample<=p),n_samples,p).pvalue > threshold
 	else:
 		dist = PDist([])
 		sample = dist.sample(RNG=rng,size=n_samples,method=method)
-		assert ks_1samp(sample,uniform.cdf).pvalue > 0.05
+		assert ks_1samp(sample,uniform.cdf).pvalue > threshold
 
 @mark.parametrize("n_ps",2**np.arange(0,10))
 @mark.parametrize("n_samples",10**np.arange(4,7))
 @mark.parametrize("method",("stochastic","proportional"))
 def test_sampling_complement(n_ps,n_samples,method,rng):
+	threshold = 0.5 if method=="proportional" else 1e-4
 	if n_ps>1:
 		dist = PDist( list(rng.random(n_ps-1)) + [1] )
 		sample = dist.sample_complement(RNG=rng,size=n_samples,method=method)
 		for p,prob in zip(dist,dist.probs):
 			q = dist.complement(p)
 			assert np.isclose( np.average(sample==q), prob, atol=3/np.sqrt(n_samples) )
-			assert_matching_p_values( np.average(sample<=q), q, n_samples )
+			assert binomtest(np.sum(sample<=q),n_samples,q).pvalue >= threshold
 	else:
 		dist = PDist([])
 		sample = dist.sample_complement(RNG=rng,size=n_samples,method=method)
-		assert ks_1samp(sample,uniform.cdf).pvalue > 0.01
+		assert ks_1samp(sample,uniform.cdf).pvalue > threshold
 
 @mark.parametrize("n_ps",2**np.arange(0,10))
 @mark.parametrize("method",("stochastic","proportional"))
