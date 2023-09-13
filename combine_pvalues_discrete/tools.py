@@ -89,39 +89,6 @@ def std_from_true_p(true_p,size):
 	"""
 	return np.sqrt(true_p*(1-true_p)*size)/(size+1)
 
-def assert_matching_p_values_old(p,target_p,n,factor=3,compare=False):
-	"""
-	Asserts that `p` (estimated with `counted_p`) matches `target_p` when estimated from `n` samples of the null model.
-	
-	The allowed error is `factor` times the expected standard deviation.
-	
-	If `target_p` is not exact but estimated by sampling as well, set `compare=True`. In this case, the average of the two values is used for estimating the standard deviation (instead of `target_p`).
-	"""
-	p = np.atleast_1d(p)
-	
-	# Correction because the p value is estimated conservatively and, e.g., can never be below 1/(n+1):
-	size_offset = np.maximum(target_p,1-target_p)/(n+1)
-	
-	diffs = np.abs( target_p - p ) - size_offset
-	
-	reference_p = (p+target_p)/2 if compare else target_p
-	with np.errstate(invalid="ignore",divide="ignore"):
-		ratios = diffs/std_from_true_p(reference_p,n)
-	
-	if np.any(ratios>factor):
-		i = np.nanargmax(ratios-factor)
-		
-		try: target = target_p[i]
-		except (IndexError,TypeError): target=target_p
-		
-		raise AssertionError(
-			f"""
-			p values don’t match. Maximum deviation:
-				target: {target}
-				actual: {p[i]}
-				difference / std: {ratios[i]} > {factor}
-			""")
-
 def assert_matching_p_values(tested_ps,target_ps,n,threshold=1e-4,compare=False):
 	"""
 	Asserts that `ps` (estimated with `counted_p`) matches `target_ps` when estimated from `n` samples of the null model using the binomial test.
