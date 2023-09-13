@@ -1,0 +1,27 @@
+name: Publish to TestPyPI
+
+on: [push]
+
+jobs:
+  build and publish:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+      - name: Build source tarball
+        run: |
+          python3 -m
+          build
+          --sdist
+          --outdir dist/
+          .
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy
+
