@@ -4,7 +4,7 @@ import numpy as np
 from warnings import warn
 from itertools import permutations
 
-from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, has_ties, unify_sorted
+from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, has_ties
 from .pdist import PDist
 
 from scipy.special import erfinv, factorial

@@ -29,27 +29,11 @@ def has_ties(array):
 	"""
 	return np.any(np.diff(sorted(array))==0)
 
-def find_similar(array,rtol,atol):
-	"""
-	Returns a boolean array the same shape as `array` indicating which pairs of neighbours are closer than rtol/atol bot not identical.
-	"""
-	return np.logical_and(
-		array[1:] != array[:-1],
-		np.isclose(array[1:],array[:-1],rtol=rtol,atol=atol)
-	)
-
-def unify_sorted(array,rtol=1e-14,atol=0):
-	"""
-	Unify values in a sorted array that only differ from their predecessor by rtol/atol – in place.
-	"""
-	while np.any( similar:= find_similar(array,rtol,atol) ):
-		array[1:][similar] = array[:-1][similar]
-
 SignTestResult = namedtuple("SignTestResult",("pvalue","not_tied","statistic"))
 
 def sign_test(x,y=0,alternative="less"):
 	"""
-	Just the sign test without any combination features, provided because it’s there.
+	Just the sign test without any combination features, provided because I have it anyway.
 	
 	**two-sided:**
 	Pass paired samples `x` and `y` as arguments. The tested null hypothesis is that `x[i]` and `y[i]` are from the same distribution (separately for each `i`).
