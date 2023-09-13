@@ -53,13 +53,16 @@ class CTR(object):
 		self.q = self.nulldist.complement(self.p)
 	
 	def __repr__(self):
-		return f"CombinableTest(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"
+		return f"CombinableTestResult(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"
 	
 	def __eq__(self,other):
-		return self.approx(other,tol=0)
+		return self.approx(other,atol=0)
 	
-	def approx(self,other,tol=1e-14):
-		return abs(self.p-other.p)<=tol and self.nulldist.approx(other.nulldist,tol)
+	def approx(self,other,atol=1e-14):
+		"""
+		Whether this result is identical to another with in an absolute tolerance `atol` between *p* values.
+		"""
+		return abs(self.p-other.p)<=atol and self.nulldist.approx(other.nulldist,atol)
 	
 	@classmethod
 	def mann_whitney_u( cls, x, y, **kwargs ):
@@ -394,11 +397,11 @@ def combine(
 	
 	rtol: non-negative float
 	atol: non-negative float
-		Values of the statistics with closer than specified by `atol` and `rtol` are regarded as identical (as in `numpy.isclose`). A small value (such as the default) may improve the results if numerical noise makes values different.
+		Values of the statistics closer than specified by `atol` and `rtol` are regarded as identical (as in `numpy.isclose`). A small value (such as the default) may improve the results if numerical noise makes values different.
 	
 	RNG
 		NumPy random-number generator used for the Monte Carlo simulation.
-		If `None`, it will be automatically generated if not specified.
+		If `None`, it will be automatically generated.
 	
 	sampling_method: "proportional" or "stochastic"
 		If `"proportional"`, the frequency of *p* values for each individual result will be exactly proportional to its probability – except for rounding. Only the rounding and the order of elements will be random.
@@ -428,6 +431,7 @@ def combine(
 	
 	statistic = get_statistic(method,weights)
 	
+	# required_args is a subset of {"p","q","w"} indicating the arguments of the combining statistic.
 	required_args = set(signature(statistic).parameters)
 	if alternative == "greater":
 		required_args = flip_pq(required_args)

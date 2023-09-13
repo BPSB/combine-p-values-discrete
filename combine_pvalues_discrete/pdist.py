@@ -97,7 +97,7 @@ class PDist(object):
 	
 	def approx(self,other,atol=1e-14):
 		"""
-		Whether this distribution is identical to another with in an absolute torlerance `atol between *p* values.
+		Whether this distribution is identical to another with in an absolute tolerance `atol` between *p* values.
 		"""
 		if self.continuous:
 			return other.continuous

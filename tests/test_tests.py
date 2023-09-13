@@ -18,8 +18,6 @@ from combine_pvalues_discrete.tools import (
 
 n_samples = 100000
 
-# All tests occur with the alternative "less".
-
 def test_simple_mwu():
 	assert (
 		CTR.mann_whitney_u([0],[1],alternative="less")
@@ -151,7 +149,7 @@ def test_simple_boschloo():
 	control_p = boschloo_exact(C,alternative="less" ).pvalue
 	assert np.isclose( result.p, control_p )
 	all_ps = [ 1/64, 0.079305, 0.273032, 11/32, 0.57860, 49/64, 1 ]
-	assert result.approx( CTR(0.079305,all_ps), tol=1e-5 )
+	assert result.approx( CTR(0.079305,all_ps), atol=1e-5 )
 
 # -----------------
 

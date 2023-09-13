@@ -318,7 +318,7 @@ def test_complement_symmetry(method_A,method_B,weighted,rng):
 			weights = rng.random(m) if weighted else None,
 			n_samples = n_samples,
 			RNG = rng,
-			alternative="less",
+			alternative = "less",
 		)
 	result_A =   combine(ctrs_A,method=method_A,**kwargs).pvalue
 	result_B = 1-combine(ctrs_B,method=method_B,**kwargs).pvalue
