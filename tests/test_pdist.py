@@ -8,6 +8,7 @@ from combine_pvalues_discrete.tools import assert_matching_p_values
 
 @mark.parametrize("method",("stochastic","proportional"))
 def test_sample_discrete(method,rng):
+	threshold = 0.5 if method=="proportional" else 1e-3
 	m = 10
 	n = 100000
 	values = range(m)
@@ -17,12 +18,13 @@ def test_sample_discrete(method,rng):
 	result = sample_discrete(values,frequencies,RNG=rng,size=n)
 	for value,frequency in zip(values,frequencies):
 		count = np.sum(result==value)
-		assert binomtest(count,n,frequency).pvalue>1e-3
+		assert binomtest(count,n,frequency).pvalue>threshold
 
 def test_core_stuff():
 	dists = ( PDist([]), PDist([1]), PDist([0.5,1]) )
 	for i,dist in enumerate(dists):
-		assert dist.continuous or i
+		if i==0:
+			assert dist.continuous
 		assert dist == dist
 	for dist1,dist2 in combinations(dists,2):
 		assert dist1 != dist2
@@ -44,8 +46,12 @@ def test_p_more_than_one():
 		PDist([-0.1,0.5,2])
 
 def test_correct_almost_1():
-	dist = PDist([0.1,1-1e-14])
+	dist = PDist([0.1,1+1e-14])
 	assert dist.ps[-1] == 1
+
+def test_p_double_one():
+	with raises(ValueError):
+		PDist([0.1,0.5,1,1+1e-14])
 
 
 @mark.parametrize("size",range(1,100))

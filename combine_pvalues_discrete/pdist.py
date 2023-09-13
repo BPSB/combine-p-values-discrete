@@ -68,7 +68,7 @@ class PDist(object):
 		if not self.continuous:
 			if not ( ( 0 < self.ps[0] ) and ( abs(self.ps[-1]-1) < 1e-10 ) ):
 				raise ValueError(f"p values must be between 0 and 1, with the largest being 1; but they are {ps}")
-			if self.ps[-1]>=1+1e-10 and len(self.ps)>1 and self.ps[-2]>=1:
+			if len(self.ps)>1 and self.ps[-2]>=1:
 				raise ValueError("Two p values slightly larger than or equal to 1.")
 			
 			# Get rid of any numerical inaccuracies:
