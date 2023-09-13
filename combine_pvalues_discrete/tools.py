@@ -3,6 +3,9 @@ import numpy as np
 from scipy.stats import binomtest, kstwo, boschloo_exact, fisher_exact
 
 def is_empty(x):
+	"""
+	Whether the argument is an empty 1D iterable or None.
+	"""
 	try:
 		return len(x)==0
 	except TypeError:
@@ -12,7 +15,6 @@ def searchsorted_closest(array,values):
 	"""
 	Wrapper around NumPy’s `searchsorted` that returns the index of the closest value(s) – as opposed to the next lower or higher one.
 	"""
-	
 	array = np.asarray(array)
 	interval = (0,len(array)-1)
 	right_idcs = np.searchsorted(array,values,side="left").clip(*interval)
@@ -29,7 +31,7 @@ def has_ties(array):
 
 def find_similar(array,rtol,atol):
 	"""
-	Returns mask of which pairs of neighbours in an array are closer than eps but not identical.
+	Returns a boolean array the same shape as `array` indicating which pairs of neighbours are closer than rtol/atol bot not identical.
 	"""
 	return np.logical_and(
 		array[1:] != array[:-1],
@@ -38,7 +40,7 @@ def find_similar(array,rtol,atol):
 
 def unify_sorted(array,rtol=1e-14,atol=0):
 	"""
-	Unify values in a sorted array that only differ from their predecessor by eps – in place.
+	Unify values in a sorted array that only differ from their predecessor by rtol/atol – in place.
 	"""
 	while np.any( similar:= find_similar(array,rtol,atol) ):
 		array[1:][similar] = array[:-1][similar]
