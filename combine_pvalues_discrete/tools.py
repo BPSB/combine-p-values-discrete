@@ -69,7 +69,7 @@ Combined_P_Value = namedtuple("Combined_P_Value",("pvalue","std"))
 
 def counted_p(orig_stat,null_stats,**tols):
 	"""
-	Estimates the p value of a statistic (`orig_stat`) by comparing with the statistic for samples of a null model (`null_stats`), with a small statistic being extreme. Returns the p value and its (estimated) standard deviation when sampling with this method.
+	Estimates the p value of a statistic (`orig_stat`) by comparing with the statistic for samples of a null model (`null_stats`), with a small statistic being extreme. Returns the p value and its (estimated) standard deviation when estimating with this method.
 	"""
 	
 	null_stats = np.asarray(null_stats)

@@ -103,19 +103,11 @@ def test_std_counted_p(rng):
 	k = 30    # number of different p values tested
 	nulls = rng.uniform(0,1,size=(n,m))
 	true_ps = np.logspace(-2,0,k)
+	
 	estimated_ps,estimated_stds = counted_p(
 			true_ps[None,None,:],
 			nulls[:,:,None],
 		)
-	assert estimated_ps.shape == (m,k)
-	stds = std_from_true_p(true_ps,n)
-	assert stds.shape == (k,)
-	control = np.std(estimated_ps,axis=0)
-	
-	deviations = true_ps - np.mean(estimated_ps,axis=0)
-	# Corrections because the p value is estimated conservatively and, e.g., can never be below 1/(n+1):
-	size_offset = (1-true_ps)/(n+1)
-	assert np.all( np.abs(deviations+size_offset) <= 3*stds/np.sqrt(m) )
 	
 	assert_matching_p_values(
 			np.mean(estimated_ps,axis=0),
@@ -123,8 +115,20 @@ def test_std_counted_p(rng):
 			n=n,
 			threshold=1e-3,
 		)
-	np.testing.assert_allclose( stds, control, rtol=3/np.sqrt(m) )
-	np.testing.assert_allclose( stds[:-1], np.mean(estimated_stds,axis=0)[:-1], rtol=3/np.sqrt(m) )
+	assert estimated_ps.shape == (m,k)
+	empirical_stds = np.std(estimated_ps,axis=0)
+	
+	true_stds = std_from_true_p(true_ps,n)
+	assert true_stds.shape == (k,)
+	
+	deviations = true_ps - np.mean(estimated_ps,axis=0)
+	# Corrections because the p value is estimated conservatively and, e.g., can never be below 1/(n+1):
+	size_offset = (1-true_ps)/(n+1)
+	assert np.all( np.abs(deviations+size_offset) <= 3*true_stds/np.sqrt(m) )
+	# (√m to get standard error)
+	
+	np.testing.assert_allclose( true_stds, empirical_stds, rtol=3/np.sqrt(m) )
+	np.testing.assert_allclose( true_stds[:-1], np.mean(estimated_stds,axis=0)[:-1], rtol=3/np.sqrt(m) )
 	# Last element is expected to be unequal, because the estimate cannot reasonably be zero.
 
 @mark.parametrize("size",range(10,100,10))
