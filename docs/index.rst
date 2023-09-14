@@ -84,7 +84,7 @@ Either way, the relevant information is stored in a `CTR` object (“combinable 
 These objects can then be combined using the `combine` function.
 
 The difficulty for determining the combined *p* value is convolving the respective null distributions.
-While this is analytically possible for continuous tests or a small number of discrete tests, it is requires numerical approximations otherwise.
+While this is analytically possible for continuous tests or a small number of discrete tests, it requires numerical approximations otherwise due to a combinatorial explosion.
 To perform these approximations, we use a Monte Carlo sampling of combinations of individual *p* values.
 Thanks to modern computing and NumPy, it is easy to make the number of samples very high and the result very accurate.
 
