@@ -54,7 +54,7 @@ For example, the only possible outcomes (*p* values) of the one-sided sign test 
 :math:`1`,
 simply because five numbers can only have so many different (unordered) combinations of signs.
 For the purposes of this module, I call these tests *discrete.*
-By contrast, for a *continous* test, all values on the interval :math:`(0,1]` are possible outcomes (for any given sample size).
+By contrast, for a *continuous* test, all values on the interval :math:`(0,1]` are possible outcomes (for any given sample size).
 
 Discrete tests include all `rank tests <https://en.wikipedia.org/wiki/Rank_test>`_, since there is only a finite number of ways to rank a given number of samples.
 Moreover, they contain tests of bound integer data.
