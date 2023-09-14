@@ -86,7 +86,7 @@ Finally we sample `n=10000` times from our null model and estimate the *p* valu
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 62-66
+	:lines: 62-67
 
 This confirms the low *p* value we obtained with `combine` above and that the *p* values obtained with the other methods were too high.
 You may note that although this value is low it is not within the confidence interval of the result of `combine` from above.
@@ -104,14 +104,14 @@ We can account for this by weighing the sub-datasets with their numbers of data 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 68-70
+	:lines: 69-71
 
 And like above, we can check this result by comparing to an explicit, computationally expensive simulation of the null hypothesis:
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 72-83
+	:lines: 73-85
 
 """
 
@@ -181,7 +181,8 @@ if __name__ == "__main__":
 	n = 10000
 	null_statistic = [ fisher_statistic(null_sample(data)) for _ in range(n) ]
 	count = np.sum( null_statistic >= data_statistic )
-	print( (count+1)/(n+1) )
+	p_from_simulation = (count+1)/(n+1)
+	print(p_from_simulation)
 	# 0.0016998300169983002
 	
 	weights = np.array([len(C)+len(T) for C,T in data])
@@ -198,6 +199,7 @@ if __name__ == "__main__":
 			for _ in range(n)
 		]
 	weighted_count = np.sum( weighted_null_statistic >= weighted_data_statistic )
-	print( (weighted_count+1)/(n+1) )
+	weighted_p_from_simulation = (weighted_count+1)/(n+1)
+	print(weighted_p_from_simulation)
 	# 0.0010998900109989002
 	
