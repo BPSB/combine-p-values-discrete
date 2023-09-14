@@ -36,7 +36,7 @@ This module addresses this and thus you should consider it if:
 * At least one of the sub-tests is *discrete* with a low number of possible *p* values. What is a “low number” depends on the details, but 30 almost always is.
 * The combined *p* value returned by `combine_pvalues` is not very low already.
 
-Also see `comparison` for a hands-on example, where only combining *p* values with accounting for the discreteness of tests yields the correct result.
+Also see `comparison` for a hands-on example, where combining *p* values only yield the correct result when we account for the discreteness of tests.
 
 **Also,** as a side product, this module also implements Monte Carlo-based **weighted** variants of methods other than Stouffer’s, which `combine_pvalues` does not provide.
 
