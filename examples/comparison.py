@@ -93,12 +93,32 @@ You may note that although this value is low it is not within the confidence int
 The reason for this is that `n` and thus `count` is low (in the above, `count` is just 16).
 Thus, the *p* value estimate from the null model is subject to much higher fluctuations than that of `combine`.
 Obtaining a precision comparable to `compare` would require an excessive amount of time.
+
+Once more with weights
+``````````````````````
+
+So far, we have treated the *p* values for each sub-dataset equally.
+However, the different sub-datasets differ considerably in size and thus meaningfulness, e.g., the first contains seven data points while the last only contains two.
+We can account for this by weighing the sub-datasets with their numbers of data points:
+
+.. literalinclude:: ../examples/comparison.py
+	:start-after: example-st\u0061rt
+	:dedent: 1
+	:lines: 68-70
+
+And like above, we can check this result by comparing to an explicit, computationally expensive simulation of the null hypothesis:
+
+.. literalinclude:: ../examples/comparison.py
+	:start-after: example-st\u0061rt
+	:dedent: 1
+	:lines: 72-83
+
 """
 
 if __name__ == "__main__":
 	# example-start
 	data = [# control group  , treatment group
-	        ( [8,13,37]      , [43,51]       ), # Breed 1
+	        ( [20,44,14,68]  , [73,22,80]    ), # Breed 1
 	        ( [60,68,46,45]  , [30]          ), # Breed 2
 	        ( [92,97,98]     , [84,89]       ), # …
 	        ( [14]           , [21,45,31,23] ),
@@ -106,8 +126,8 @@ if __name__ == "__main__":
 	        ( [93,76,70,83]  , [84]          ),
 	        ( [10,2]         , [28,36,11]    ),
 	        ( [27]           , [38,58]       ),
+	        ( [8,13,37]      , [43,51]       ),
 	        ( [18]           , [12]          ),
-	        ( [20,44,14,68]  , [73,22,80]    ),
 	]
 	
 	# Pooling data and MWU test
@@ -163,4 +183,21 @@ if __name__ == "__main__":
 	count = np.sum( null_statistic >= data_statistic )
 	print( (count+1)/(n+1) )
 	# 0.0016998300169983002
-
+	
+	weights = np.array([len(C)+len(T) for C,T in data])
+	print( combine(ctrs,method="fisher",weights=weights) )
+	# Combined_P_Value(pvalue=0.001098999890100011, std=1.0477080696699578e-05)
+	
+	def weighted_fisher_statistic(dataset,weights):
+		pvalues = [ mannwhitneyu(C,T,alternative="less").pvalue for C,T in dataset ]
+		return -2*weights.dot(np.log(pvalues))
+	
+	weighted_data_statistic = weighted_fisher_statistic(data,weights)
+	weighted_null_statistic = [
+			weighted_fisher_statistic(null_sample(data),weights)
+			for _ in range(n)
+		]
+	weighted_count = np.sum( weighted_null_statistic >= weighted_data_statistic )
+	print( (weighted_count+1)/(n+1) )
+	# 0.0010998900109989002
+	
