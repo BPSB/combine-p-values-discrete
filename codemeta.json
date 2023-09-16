@@ -1,0 +1,11 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": "Gerrit Ansmann",
+  "identifier": "10.5281/zenodo.8338798",
+  "codeRepository": "https://github.com/BPSB/combine-p-values-discrete/",
+  "description": "A Python module for combining p values of discrete tests.",
+  "keywords": "statistics, combining p values, hypothesis tests, Python",
+  "license": "BSD",
+  "title": "Combine p values discrete",
+}
