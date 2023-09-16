@@ -404,6 +404,8 @@ def combine(
 		If `None`, it will be automatically generated.
 	
 	sampling_method: "proportional" or "stochastic"
+		How to sample from the *p* value distributions of the subtests.
+		
 		If `"proportional"`, the frequency of *p* values for each individual result will be exactly proportional to its probability – except for rounding. Only the rounding and the order of elements will be random.
 		
 		If `"stochastic"`, the values will be randomly sampled and thus their sampled frequencies are subject to stochastic fluctuations. This usually leads to slightly less accurate results, but the simulations are statistically independent.
