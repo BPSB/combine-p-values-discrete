@@ -29,7 +29,7 @@ This module has a scope similar to SciPy’s `combine_pvalues`_:
 * There is no straightforward test to apply to the entire dataset.
 * You want a single *p* value for the null hypothesis taking into account the entire dataset, i.e., you want to combine your test results for the sub-datasets.
 
-**However,** SciPy’s `combine_pvalues` assumes that the individual tests are continuous (see below for a definition), and applying it to discrete tests will yield a systematically wrong combined *p* value.
+**However,** SciPy’s `combine_pvalues` assumes that the individual tests are continuous (see below for a definition), and applying it to discrete tests will yield a systematically wrong combined *p* value [Kincaid1962]_, [Mielke2004]_.
 For example, for `Fisher’s method`_ it systematically overestimates the *p* value, i.e., you may falsely accept the null hypothesis (false negative).
 This module addresses this and thus you should consider it if:
 
@@ -142,7 +142,7 @@ Example: Mann–Whitney *U* test
 Supported combining methods
 ---------------------------
 
-This module supports the following combining methods.
+This module supports the following combining methods [Heard2018]_.
 They are listed together with their test statistics – with :math:`p_i` being the *p* values of the individual tests and :math:`q_i` being their complements (see `complements`):
 
 * Fisher: :math:`\prod\limits_i p_i`
@@ -150,7 +150,7 @@ They are listed together with their test statistics – with :math:`p_i` being 
 * Mudholkar and George (default): :math:`\prod\limits_i \frac{p_i}{q_i}`
 * Edgington: :math:`\sum\limits_i p_i` and Edgington symmetrised: :math:`\sum\limits_i p_i+1-q_i` (see below as to why you may want this)
 * Stouffer: :math:`\sum\limits_i \Phi^{-1} (p_i)`, where :math:`\Phi` is the CDF of the standard normal distribution.
-* Simes: :math:`\min\limits_i \left( \frac{p_i}{R(p_i)} \right)`, where :math:`R(p_i)` is the rank of :math:`p_i` amongst all combined *p* values.
+* Simes: :math:`\min\limits_i \left( \frac{p_i}{R(p_i)} \right)`, where :math:`R(p_i)` is the rank of :math:`p_i` amongst all combined *p* values [Simes1986]_..
 * Tippett: :math:`\min\limits_i(p_i)`
 
 Weighted variants exist for all but the latter two (for which they do not make sense).
@@ -184,7 +184,7 @@ Of the supported methods, only three fulfil this:
 
 * Stouffer’s method which becomes infinite if :math:`p=1` for any sub-test (and thus cannot distinguish between this happening for one or almost all tests)
 * Edgington’s symmetrised method, which does not give extreme *p* values the emphasis they deserve (in my humble opinion), e.g., a *p* value changing from 0.1 to 0.001 has the same effect as one changing from 0.5 to 0.401.
-* Mudholkar’s and George’s method, which puts emphasis on extreme *p* values, i.e., close to 0 or 1.
+* Mudholkar’s and George’s method, which puts emphasis on extreme *p* values, i.e., close to 0 or 1.
 
 I therefore prefer the latter in this case.
 
@@ -193,6 +193,7 @@ In the dog example, this corresponds to the research hypothesis that the drug is
 In this case, a method emphasising low *p* values is more appropriate, e.g., Fisher’s.
 
 For other research hypotheses, you have yet other considerations and appropriate methods.
+Also see [Adcock1960]_ for a discussion of this.
 
 Supported Tests
 ---------------
@@ -215,7 +216,20 @@ Command reference
 .. automodule:: combine_pvalues_discrete
 	:members: CTR, combine, direction, sign_test
 
+References
+----------
+
 .. _combine_pvalues: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.combine_pvalues.html
 
 .. _Fisher’s method: https://en.wikipedia.org/wiki/Fisher%27s_method
+
+.. [Adcock1960] C. J. Adcock: *A note on combining probabilities,* Psychometrika 25, pp. 303–305 (1960), `10.1007/BF02289734 <https://dx.doi.org/10.1007/BF02289734>`_
+
+.. [Kincaid1962] W. M. Kincaid: *The combination of tests based on discrete distributions,*  Journal of the American Statistical Association 57 (297), pp. 10–19 (1962), `10.1080/01621459.1962.10482147 <https://dx.doi.org/10.1080/01621459.1962.10482147>`_
+
+.. [Simes1986] R. J. Simes: *An improved Bonferroni procedure for multiple tests of significance,* Biometrika 73 (3), pp. 751–754 (1986), `10.1093/biomet/73.3.751 <https://dx.doi.org/10.1093/biomet/73.3.751>`_
+
+.. [Mielke2004] P. W. Mielke and J. E. Johnston and K. J. Berry: *Combining probability values from independent permutation tests: A discrete analog of Fisher’s classical method,* Psychological Reports 95 (2), pp. 449–458 (2004), `10.2466/pr0.95.2.449-458 <https://dx.doi.org/10.2466/pr0.95.2.449-458>`_
+
+.. [Heard2018] N. A. Heard and P. Rubin-Delanchy: *Choosing between methods of combining p-values,* Biometrika 105 (1), pp. 239–246 (2018) `10.1093/biomet/asx076 <https://dx.doi.org/10.1093/biomet/asx076>`_
 
