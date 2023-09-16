@@ -24,7 +24,7 @@ To draw an overall conclusion in such a case, we need to combine the $p$ values
 Starting with Fisher’s method, several ways have been proposed to combine $p$ values [@Heard2018].
 Their usual implementations assume *continuous tests,* i.e., tests whose $p$ values under the null hypothesis follow the uniform distribution on the unit interval.
 However, rank tests and many others are *discrete tests,* i.e., they can only yield $p$ values from a finite selection (for a given sample size).
-Assuming continuous tests when combining $p$ values from discrete tests can lead to considerably misleading outcomes, in particular when the sub-datasets are small.
+Assuming continuous tests when combining $p$ values from discrete tests can lead to considerably misleading outcomes [@Kincaid1962; @Mielke2004], in particular when the sub-datasets are small.
 
 We here present the Python module `combine_pvalues_discrete`, which provides a toolbox for combining $p$ values from discrete tests.
 Results from individual tests are stored with the respective null distribution of $p$ values and the combined $p$ value is accurately estimated using a Monte Carlo simulation based on these null distributions.
