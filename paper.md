@@ -34,6 +34,7 @@ Results from individual tests are stored with the respective null distribution o
 Combining $p$ values is a standard problem in statistical data analysis.
 Before the advent of modern computing, many methods have been devoted to analytically solving this problem for continuous tests [@Heard2018], and implementations of these simple methods are a staple of many statistical software suits [@SciPy; @Cinar2022].
 However, applying these implementations to discrete tests can result in considerable errors [@Kincaid1962; @Mielke2004] – a problem of which there appears to be little awareness.
+Discrete tests particularly include all rank tests, which are often an appropriate choice as they do not make any assumptions of normality or similar.
 
 Thanks to modern computing, we can solve this problem using simple Monte Carlo simulations:
 For each test, we sample one $p$ value from each of the respective discrete null distributions, apply the combining statistics to these, and repeat this until we obtain a good estimate of the null distribution of the combining statistics.
