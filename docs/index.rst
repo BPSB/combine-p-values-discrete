@@ -22,6 +22,8 @@ Or use the following to directly install from GitHub:
 When do you need this?
 ----------------------
 
+*If you want a more hands-on introduction on what kind of problems this module handles and that it can make a difference, feel free to first read:* `comparison`.
+
 This module has a scope similar to SciPy’s `combine_pvalues`_:
 
 * You have a dataset consisting of **independent** sub-datasets. (So this is not about multiple testing or pseudo-replication.)
@@ -36,25 +38,37 @@ This module addresses this and thus you should consider it if:
 * At least one of the sub-tests is *discrete* with a low number of possible *p* values. What is a “low number” depends on the details, but 30 almost always is.
 * The combined *p* value returned by `combine_pvalues` is not very low already.
 
-Also see `comparison` for a hands-on example, where combining *p* values only yield the correct result when we account for the discreteness of tests.
+See `comparison` for an example, where combining *p* values only yields the correct result when we account for the discreteness of tests.
 
 **Also,** as a side product, this module also implements Monte Carlo-based **weighted** variants of methods other than Stouffer’s, which `combine_pvalues` does not provide.
 
 Discrete and continuous tests
 `````````````````````````````
 
-If the null hypothesis of a given test holds, its *p* values are uniformly distributed on the interval :math:`(0,1]` in the sense that :math:`\text{CDF}(p_0) = P(p≤p_0) = p_0`.
+If the null hypothesis of a given test holds, its *p* values are uniformly distributed on the interval :math:`(0,1]` in the sense that :math:`\text{CDF}(p_0) ≡ P(p≤p_0) = p_0`.
 However, for some tests, there is a limited number of possible outcomes for a given sample size.
-For example, the only possible outcomes (*p* values) of the one-sided sign test for a sample size of 5 are
+For the purposes of this module, I call such tests *discrete.*
+By contrast, for a *continuous* test, all values on the interval :math:`(0,1]` are possible outcomes (for any given sample size).
+
+For example, the `sign test <https://en.wikipedia.org/wiki/Sign_test>`_ is discrete:
+Its one-sample variant evaluates how often each sign occurs in the dataset.
+Therefore, for a sample size of five, every dataset can be boiled down to one of six possible scenarios:
+:math:`[++++++]`,
+:math:`[+++++-]`,
+…,
+:math:`[------]`.
+For the one-sided test, these correspond to the *p* values
 :math:`\frac{ 1}{32}`,
 :math:`\frac{ 3}{16}`,
 :math:`\frac{ 1}{ 2}`,
 :math:`\frac{13}{16}`,
 :math:`\frac{31}{32}`, and
-:math:`1`,
-simply because five numbers can only have so many different (unordered) combinations of signs.
-For the purposes of this module, I call these tests *discrete.*
-By contrast, for a *continuous* test, all values on the interval :math:`(0,1]` are possible outcomes (for any given sample size).
+:math:`1`.
+These six *p* values are the only possible outcomes of the test.
+
+By contrast, the *t* test is continuous:
+Even for a sample size of two, every value in the interval :math:`(0,1]` can be obtained with the right data.
+For example, for the dataset :math:`[98,99]`, the one-sided, one-sample variant of the test yields :math:`p=0.0016`.
 
 Discrete tests include all `rank tests <https://en.wikipedia.org/wiki/Rank_test>`_, since there is only a finite number of ways to rank a given number of samples.
 Moreover, they contain tests of bound integer data.
@@ -85,6 +99,7 @@ These objects can then be combined using the `combine` function.
 
 The difficulty for determining the combined *p* value is convolving the respective null distributions.
 While this is analytically possible for continuous tests or a small number of discrete tests, it requires numerical approximations otherwise due to a combinatorial explosion.
+Even for the small 
 To perform these approximations, we use a Monte Carlo sampling of combinations of individual *p* values.
 Thanks to modern computing and NumPy, it is easy to make the number of samples very high and the result very accurate.
 
@@ -156,6 +171,7 @@ They are listed together with their test statistics – with :math:`p_i` being 
 Weighted variants exist for all but the latter two (for which they do not make sense).
 
 Note that we use different, but equivalent statistics internally for numerical reasons.
+In particular, we transform products to sums in logarithmic space to avoid numerical underflows.
 
 .. _method_choice:
 
@@ -167,7 +183,7 @@ In `comparison`, this corresponds to the drug being beneficial to dogs in genera
 
 The trend may manifest more clearly in some of the datasets (and you don’t know which a priori), but it should not be inverted (other than by chance).
 In this case, you would perform one-sided sub-tests.
-(If you would consider both directions of trend a finding, the combination needs to be two-sided, not the sub-tests.)
+(If you would consider a trend in either direction a finding, the combination needs to be two-sided, not the sub-tests.)
 
 If the *p* value of such a sub-test is small, the sub-dataset exhibits the trend you hypothesised.
 Conversely, if the complement :math:`q ≈ 1-p` of a sub-test is small, the sub-dataset exhibits a trend opposite to what you hypothesised – with a *p* value *q*.

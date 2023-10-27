@@ -4,7 +4,7 @@
 """
 In this example, we illustrate the benefits of this module by comparing it with other approaches to the same dataset, all of which yield wrong results or consume a lot of time.
 
-Suppose we want to to explore the effect on a drug on dogs.
+Suppose, we want to to explore the effect on a drug on dogs.
 We expect our observable (by which we measure the effect of the drug) be more affected by the dog breed than by the drug, e.g., because a poodle is generally weaker than a mastiff.
 Therefore we group the dogs by breed a priori, creating sub-datasets.
 Each breed group gets further randomly split into a treatment (T) and control group (C).
@@ -34,7 +34,7 @@ This way, we do not need to combine tests, but we lose statistical power, i.e., 
 	:lines: 15-20
 
 Alternatively, we can summarise the samples in each pair by their median and use the sign test to compare the groups.
-Again, we discard information and lose statistical power:
+Again, we discard information and thus lose statistical power:
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
@@ -64,7 +64,7 @@ Checking the result
 ```````````````````
 
 Let’s convince ourselves that the result of `combine` is actually correct.
-To this end, we first implement the statistic of Fisher’s method for combining Mann–Whitney *U* tests.
+To this end, we first implement the statistic of Fisher’s method (as used by SciPy) for combining Mann–Whitney *U* tests.
 Note how the result agrees with that of applying `combine_pvalues` above:
 
 .. literalinclude:: ../examples/comparison.py
@@ -73,7 +73,7 @@ Note how the result agrees with that of applying `combine_pvalues` above:
 	:lines: 47-53
 
 
-Next we implement a function that samples analogous datasets corresponding to our null hypothesis (surrogates).
+Next, we implement a function that samples analogous datasets corresponding to our null hypothesis (surrogates).
 (Since we only care about the order of samples, we do not have to recreate the magnitude of values.)
 
 .. literalinclude:: ../examples/comparison.py
@@ -81,7 +81,7 @@ Next we implement a function that samples analogous datasets corresponding to ou
 	:dedent: 1
 	:lines: 55-60
 
-Finally we sample `n=10000` times from our null model and estimate the *p* value by comparing the values of Fisher’s statistic for the null model and the original data.
+Finally, we sample `n=10000` times from our null model and estimate the *p* value by comparing the values of Fisher’s statistic for the null model and the original data.
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
@@ -92,7 +92,7 @@ This confirms the low *p* value we obtained with `combine` above and that the *
 You may note that although this value is low it is not within the confidence interval of the result of `combine` from above.
 The reason for this is that `n` and thus `count` is low (in the above, `count` is just 16).
 Thus, the *p* value estimate from the null model is subject to much higher fluctuations than that of `combine`.
-Obtaining a precision comparable to `compare` would require an excessive amount of time.
+Obtaining a precision comparable to `combine` would require an excessive amount of time.
 
 Once more with weights
 ``````````````````````
