@@ -7,8 +7,10 @@ tags:
 authors:
   - name: Gerrit Ansmann
     orcid: 0000-0002-5472-7067
+    affiliation: 1
 affiliations:
- - name: Institute for Biological Physics, University of Cologne, Germany
+  - name: Institute for Biological Physics, University of Cologne, Germany
+    index: 1
 bibliography: paper.bib
 
 ---
