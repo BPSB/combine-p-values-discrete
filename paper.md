@@ -16,7 +16,7 @@ bibliography: paper.bib
 # Summary
 
 Most popular hypothesis tests are designed for datasets with a simple structure.
-For example, in a simple medical trial, this structure would be a treatment and a control group, and a test would answer whether some health score exhibits a significat difference between their members.
+For example, in a simple medical trial, this structure would be a treatment and a control group, and a test would answer whether some health score exhibits a significant difference between their members.
 However, many datasets are naturally segmented or benefit from being analysed in segments.
 Continuing our example, if we know a priori that females score higher than males on average, analysing each sex separately should allow us to see more clearly whether the treatment is effective.
 To draw an overall conclusion in such a case, we need to combine the $p$ values for each sub-dataset.
@@ -39,7 +39,7 @@ Discrete tests particularly include all rank tests, which are an appropriate cho
 Thanks to modern computing, we can solve this problem using simple Monte Carlo simulations:
 For each test, we sample one $p$ value from each of the respective discrete null distributions, apply the combining statistics to these, and repeat this until we obtain a good estimate of the null distribution of the combining statistics.
 Finally, we compare the combining statistics of the actual data to estimate the combined $p$ value.
-`combine_pvalues_discrete` implements this approach in a fast, thorough, and tested manner, taking care of pitfalls such as correctly handling complements, sidedness, and empirical $p$ values as well as handling tedious and error-prone tasks such as determining the null distribution $p$ values for a given test and sample size.
+The presented module `combine_pvalues_discrete` implements this approach in a fast, thorough, and tested manner, taking care of pitfalls such as correctly handling complements, sidedness, and empirical $p$ values as well as handling tedious and error-prone tasks such as determining the null distribution $p$ values for a given test and sample size.
 This approach is considerably faster than a permutation test starting at the level of individual datasets.
 
 Note that this module de-emphasises some typical applications of combining $p$ values as it can be rarely applied to them.
