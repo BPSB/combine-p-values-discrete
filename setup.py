@@ -11,7 +11,7 @@ setup(
 		packages = ["combine_pvalues_discrete"],
 		install_requires = ["numpy","scipy>=1.8.1"],
 		setup_requires = ["setuptools_scm","pytest-runner","pytest-rng"],
-		tests_require = ["pytest","statsmodels","pytest-rng"],
+		extras_require = {'test': ['pytest','statsmodels','pytest-rng']},
 		use_scm_version = {"write_to": "combine_pvalues_discrete/version.py", "local_scheme": "no-local-version"},
 		classifiers = [
 				"License :: OSI Approved :: BSD License",
