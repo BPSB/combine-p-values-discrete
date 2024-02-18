@@ -48,7 +48,7 @@ Also, it handles tedious and error-prone tasks such as determining the null dist
 By storing and sampling the null distribution of $p$ values for each sub-dataset, our approach is considerably faster than using a Monte Carlo null model for the entire dataset by combining samples from Monte Carlo null models of the sub-datasets.
 
 Note that this module de-emphasises some typical applications of combining $p$ values in which we expect known discrete null distributions of $p$ values to rarely occur.
-For example, when performing a meta analysis of existing studies, the null distributions of $p$ values are either continuous, close to it, or not known.
+For example, when performing a meta analysis of existing studies, the null distributions of $p$ values are usually either continuous, close to it, or unknown.
 However, as a side product, our module contains weighted versions of popular combining methods that may be of interest to researchers combining continuous tests.
 
 # Acknowledgements
