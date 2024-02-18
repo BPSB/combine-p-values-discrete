@@ -89,7 +89,7 @@ Finally, we sample `n=10000` times from our null model and estimate the *p* val
 	:lines: 62-67
 
 This confirms the low *p* value we obtained with `combine` above and that the *p* values obtained with the other methods were too high.
-You may note that although this value is low it is not within the confidence interval of the result of `combine` from above.
+You may note that, although this value is low, it is not within the confidence interval of the result of `combine` from above.
 The reason for this is that `n` and thus `count` is low (in the above, `count` is just 16).
 Thus, the *p* value estimate from the null model is subject to much higher fluctuations than that of `combine`.
 Obtaining a precision comparable to `combine` would require an excessive amount of time.
