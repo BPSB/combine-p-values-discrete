@@ -65,9 +65,9 @@ class CTR(object):
 		return f"CombinableTestResult(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"
 	
 	def __eq__(self,other):
-		return self.approx(other,atol=0)
+		return self._approx(other,atol=0)
 	
-	def approx(self,other,atol=1e-14):
+	def _approx(self,other,atol=1e-14):
 		"""
 		Whether this result is identical to another with in an absolute tolerance `atol` between *p* values.
 		"""

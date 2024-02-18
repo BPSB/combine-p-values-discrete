@@ -58,7 +58,7 @@ def test_simple_wilcoxon(n,rng):
 		([1,2,2], [3,3,5], "greater",  2/3 , [ 2/3,           1 ]),
 	])
 def test_simple_spearman(x,y,alt,p,all_ps):
-	assert CTR.spearmanr( x, y, alternative=alt ).approx( CTR(p,all_ps) )
+	assert CTR.spearmanr( x, y, alternative=alt )._approx( CTR(p,all_ps) )
 
 @mark.parametrize("alt",["less","greater"])
 def test_spearman_large_dataset(rng,alt):
@@ -126,7 +126,7 @@ def test_spearman(n,rng):
 def test_simple_kendall(x,y,alt,p,all_ps):
 	result = CTR.kendalltau( x, y, alternative=alt )
 	control_p = kendalltau(x,y,alternative=alt).pvalue
-	assert result.approx( CTR(p,all_ps) )
+	assert result._approx( CTR(p,all_ps) )
 	assert np.isclose( result.p, control_p )
 
 @mark.parametrize(
@@ -140,7 +140,7 @@ def test_simple_kendall(x,y,alt,p,all_ps):
 def test_simple_fisher_exact(C,alt,p,all_ps):
 	result = CTR.fisher_exact( C, alternative=alt )
 	control_p = fisher_exact(C,alternative=alt)[1]
-	assert result.approx( CTR(p,all_ps) )
+	assert result._approx( CTR(p,all_ps) )
 	assert np.isclose( result.p, control_p )
 
 def test_simple_boschloo():
@@ -149,7 +149,7 @@ def test_simple_boschloo():
 	control_p = boschloo_exact(C,alternative="less" ).pvalue
 	assert np.isclose( result.p, control_p )
 	all_ps = [ 1/64, 0.079305, 0.273032, 11/32, 0.57860, 49/64, 1 ]
-	assert result.approx( CTR(0.079305,all_ps), atol=1e-5 )
+	assert result._approx( CTR(0.079305,all_ps), atol=1e-5 )
 
 # -----------------
 
