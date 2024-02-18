@@ -35,6 +35,15 @@ class CTR(object):
 	all_ps
 		An iterable containing all possible *p* values of the test for datasets with the same size as the dataset for this individual test.
 		If `None` or empty, all *p* values will be considered possible, i.e., the test will be assumed to be continuous.
+	
+	Examples
+	--------
+	.. code-block:: python3
+	
+		p = 0.1
+		possible_ps = [0.1,0.5,1]
+		ctr = CTR(p,possible_ps)
+	
 	"""
 	def __init__(self,p,all_ps=None):
 		if p==0: raise ValueError("p value cannot be zero.")
@@ -74,10 +83,18 @@ class CTR(object):
 		Parameters
 		----------
 		x,y
-			The two arrays of samples to compare.
+			The two iterables of samples to compare.
 		
 		kwargs
 			Further keyword arguments to be passed on to SciPy’s `mannwhitneyu`, such as `alternative`.
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			dataset_A = [20,44,14,68]
+			dataset_B = [73,22,80]
+			ctr = CTR.mann_whitney_u(dataset_A,dataset_B,alternative="less")
 		"""
 		x = np.array(x)
 		y = np.array(y)
@@ -109,6 +126,14 @@ class CTR(object):
 			The two arrays of paired samples to compare. If `y` is a number, a one-sample sign test is performed with `y` as the median. With `y` as an iterable, the two-sample test is performed.
 		
 		alternative: "less" or "greater"
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			dataset_A = [20,44,14,68]
+			dataset_B = [73,22,80,53]
+			ctr = CTR.sign_test(dataset_A,dataset_B,alternative="less")
 		"""
 		
 		assert_one_sided(alternative)
@@ -129,6 +154,14 @@ class CTR(object):
 			The two arrays of paired samples to compare. If `y` is `None`, the one-sample test is performed, otherwise the two-sample one.
 		
 		alternative: "less" or "greater"
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			dataset_A = [20,44,14,68]
+			dataset_B = [73,22,80,53]
+			ctr = CTR.wilcoxon_signed_rank(dataset_A,dataset_B,alternative="less")
 		"""
 		
 		assert_one_sided(alternative)
@@ -158,6 +191,14 @@ class CTR(object):
 		
 		n_thresh:
 			Threshold under which a permutation test is used.
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			dataset_A = [1,3,4,2,5,6]
+			dataset_B = [3,1,2,5,6,4]
+			ctr = CTR.spearmanr(dataset_A,dataset_B,alternative="greater")
 		"""
 		n = len(x)
 		
@@ -202,6 +243,14 @@ class CTR(object):
 			The two arrays of samples to correlate.
 		
 		alternative: "greater" or "less"
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			dataset_A = [1,3,4,2,5,6]
+			dataset_B = [3,1,2,5,6,4]
+			ctr = CTR.kendalltau(dataset_A,dataset_B,alternative="greater")
 		"""
 		
 		assert_one_sided(kwargs["alternative"])
@@ -231,6 +280,13 @@ class CTR(object):
 			The contingency table.
 		
 		alternative: "less" or "greater"
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			contingency_table = [[10,4],[5,4]]
+			ctr = CTR.fisher_exact(contingency_table,alternative="greater")
 		"""
 		
 		assert_one_sided(alternative)
@@ -265,6 +321,13 @@ class CTR(object):
 		
 		atol
 			*p* values that are closer than this are treated as identical.
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			contingency_table = [[10,4],[5,4]]
+			ctr = CTR.boschloo_exact(contingency_table,alternative="greater")
 		"""
 		
 		assert_one_sided(alternative)
@@ -419,6 +482,17 @@ def combine(
 	
 	std
 		The estimated standard deviation of *p* values when repeating the sampling. This is accurate for stochastic sampling and overestimating for proportional sampling.
+	
+	Examples
+	--------
+	.. code-block:: python3
+	
+		ctrs = [
+			CTR.sign_test( [24,58,10], [65,51,61], alternative="less" ),
+			CTR.mann_whitney_u( [20,44,14,68], [73,22,80], alternative="less" ),
+			CTR( ttest_ind( [28,36,11], [93,76,70,83], alternative="less" ).pvalue ),
+		]
+		compound_p = combine(ctrs,alternative="less").pvalue
 	"""
 	
 	if len(ctrs)==1:
@@ -478,12 +552,23 @@ def direction( ctrs, weights=None, method="mudholkar_george" ):
 	
 	Parameters
 	----------
-	As for `combine`.
+	`weights` and `method` as for `combine`.
 	
 	Returns
 	-------
 	direction: string
 		One of "less", "greater" or "equal". The latter is only returned if the statistics of the combining method are exactly equal in either direction.
+	
+	Examples
+	--------
+	.. code-block:: python3
+	
+		ctrs = [
+			CTR.sign_test( [24,58,10], [65,51,61], alternative="less" ),
+			CTR.mann_whitney_u( [20,44,14,68], [73,22,80], alternative="less" ),
+			CTR( ttest_ind( [28,36,11], [93,76,70,83], alternative="less" ).pvalue ),
+		]
+		trend = direction(ctrs)
 	"""
 	
 	if len(ctrs)==1:
