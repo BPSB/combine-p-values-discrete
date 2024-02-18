@@ -197,9 +197,9 @@ This also means that the following results exactly negate each other:
 
 Of the supported methods, only three fulfil this:
 
-* Stouffer’s method which becomes infinite if :math:`p=1` for any sub-test (and thus cannot distinguish between this happening for one or almost all tests)
-* Edgington’s symmetrised method, which does not give extreme *p* values the emphasis they deserve (in my humble opinion), e.g., a *p* value changing from 0.1 to 0.001 has the same effect as one changing from 0.5 to 0.401.
-* Mudholkar’s and George’s method, which puts emphasis on extreme *p* values, i.e., close to 0 or 1.
+* Stouffer’s method. However, its statistics becomes infinite if :math:`p=1` for any sub-test and thus the method cannot distinguish between this happening for one or almost all tests.
+* Edgington’s symmetrised method. However, this does not give extreme *p* values the emphasis they deserve (in my humble opinion), e.g., a *p* value changing from 0.1 to 0.001 has the same effect as one changing from 0.5 to 0.401.
+* Mudholkar’s and George’s method. This one puts emphasis on extreme *p* values, i.e., close to 0 or 1.
 
 I therefore prefer the latter in this case.
 
