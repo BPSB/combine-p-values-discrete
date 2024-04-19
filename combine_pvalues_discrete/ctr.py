@@ -36,16 +36,20 @@ class CTR(object):
 		An iterable containing all possible *p* values of the test for datasets with the same size as the dataset for this individual test.
 		If `None` or empty, all *p* values will be considered possible, i.e., the test will be assumed to be continuous.
 	
+	dof
+		Number of degrees of freedom that affect the test’s outcome; only relevant for automatic weighting (see the `weights` argument of `combine`).
+	
 	Examples
 	--------
 	.. code-block:: python3
 	
 		p = 0.1
 		possible_ps = [0.1,0.5,1]
-		ctr = CTR(p,possible_ps)
+		dof = 7
+		ctr = CTR(p,possible_ps,dof)
 	
 	"""
-	def __init__(self,p,all_ps=None):
+	def __init__(self,p,all_ps=None,dof=None):
 		if p==0: raise ValueError("p value cannot be zero.")
 		if np.isnan(p): raise ValueError("p value must not be NaN.")
 		
@@ -60,9 +64,14 @@ class CTR(object):
 		self.p = p
 		self.nulldist = PDist(all_ps)
 		self.q = self.nulldist.complement(self.p)
+		self.dof = dof
 	
 	def __repr__(self):
-		return f"CombinableTestResult(\n\t p-value: {self.p},\n\t nulldist: {self.nulldist}\n )"
+		return f"""CombinableTestResult(
+		\t p-value: {self.p},
+		\t nulldist: {self.nulldist}
+		\t degrees of freedom: {self.dof}
+		\t )"""
 	
 	def __eq__(self,other):
 		return self._approx(other,atol=0)
@@ -71,7 +80,11 @@ class CTR(object):
 		"""
 		Whether this result is identical to another with in an absolute tolerance `atol` between *p* values.
 		"""
-		return abs(self.p-other.p)<=atol and self.nulldist.approx(other.nulldist,atol)
+		return (
+				abs(self.p-other.p) <= atol and
+				self.nulldist.approx(other.nulldist,atol) and
+				self.dof == other.dof
+			)
 	
 	@classmethod
 	def mann_whitney_u( cls, x, y, **kwargs ):
@@ -79,6 +92,8 @@ class CTR(object):
 		Creates an object representing the result of a single Mann–Whitney *U* test (using SciPy’s `mannwhitneyu`).
 		
 		Ties are not supported yet because I expect them not to occur in the scenarios that require test combinations (but I may be wrong about this) and they make things much more complicated.
+		
+		For automatic weighting, the number of degrees of freedom is taken to be `len(x) + len(y) - 1`. Note how this aligns with the sign test and Wilcoxon’s signed rank test when either `x` or `y` has size 1.
 		
 		Parameters
 		----------
@@ -112,13 +127,15 @@ class CTR(object):
 			warn('Can only use `method="exact"`.')
 		
 		p = mannwhitneyu(x,y,method="exact",**kwargs).pvalue
-		possible_ps = [ _mwu_state.cdf( U,n,m ) for U in range(n*m+1) ]
-		return cls( p, possible_ps )
+		possible_ps = [ _mwu_state.cdf(U,n,m) for U in range(n*m+1) ]
+		return cls( p, possible_ps, n+m-1 )
 	
 	@classmethod
 	def sign_test( cls, x, y=0, alternative="less" ):
 		"""
 		Creates an object representing the result of a single sign test.
+		
+		For automatic weighting, the number of pairs is taken as the number of degrees of freedom.
 		
 		Parameters
 		----------
@@ -141,12 +158,15 @@ class CTR(object):
 		p,m,_ = sign_test(x,y,alternative)
 		
 		all_ps = list( np.cumsum([math.comb(m,i)/2**m for i in range(m)]) ) + [1]
-		return cls( p, all_ps )
+		
+		return cls( p, all_ps, m )
 	
 	@classmethod
 	def wilcoxon_signed_rank( cls, x, y=None, alternative="less" ):
 		"""
 		Creates an object representing the result of a single Wilcoxon signed-rank test.
+		
+		For automatic weighting, the number of pairs is taken as the number of degrees of freedom.
 		
 		Parameters
 		----------
@@ -174,13 +194,15 @@ class CTR(object):
 		all_ps = np.cumsum( _get_wilcoxon_distr(n) )
 		p = wilcoxon(x,y,alternative=alternative,mode="exact").pvalue
 		
-		return cls( p, all_ps )
+		return cls( p, all_ps, n )
 	
 	@classmethod
 	def spearmanr( cls, x, y, alternative="greater", n_thresh=9 ):
 		"""
 		Creates an object representing the result of a single Spearman’s ρ test.
 		If the size of `x` and `y`, *n,* is smaller than `n_thresh`, *p* values are exactly determined using a permutation test. Otherwise *p* values are computed using SciPy’s `spearmanr` assuming a uniform distribution of *p* values and ensuring :math:`p≥\\frac{1}{n!}`.
+		
+		For automatic weighting, the number of degrees of freedom is taken to be one less than the number of pairs.
 		
 		Parameters
 		----------
@@ -205,7 +227,7 @@ class CTR(object):
 		if n>n_thresh:
 			p = spearmanr(x,y,alternative=alternative).pvalue
 			p = np.clip( p, 1/factorial(n), 1 )
-			return cls(p)
+			return cls(p,dof=n-1)
 		
 		# Working with n³·cov(2R(x),2R(y)) because it is integer. As a statistics, it is equivalent to Spearman’s ρ.
 		x_r = np.fix(2*rankdata(x)).astype(int)
@@ -228,14 +250,16 @@ class CTR(object):
 		cov_to_p = dict( zip( possible_covs, np.linspace(1/k,1,k) ) )
 		
 		orig_p = cov_to_p[orig_cov]
-		return cls( orig_p, list(cov_to_p.values()) )
+		return cls( orig_p, list(cov_to_p.values()), n-1 )
 	
 	@classmethod
 	def kendalltau( cls, x, y, **kwargs ):
 		"""
 		Creates an object representing the result of a single Kendall’s τ test using SciPy’s `kendalltau` to compute *p* values.
 		
-		NaNs and ties are not supported.
+		NaNs and ties are not supported yet.
+		
+		For automatic weighting, the number of degrees of freedom is taken to be one less than the number of pairs.
 		
 		Parameters
 		----------
@@ -267,12 +291,14 @@ class CTR(object):
 			for dis in range(0,math.comb(n,2)+1)
 		]
 		
-		return cls(p,possible_ps)
+		return cls(p,possible_ps,n-1)
 	
 	@classmethod
 	def fisher_exact( cls, C, alternative="less" ):
 		"""
-		Creates an object representing the result of Fisher’s exact test for a single contingency table C. This is unrelated to Fisher’s method of combining *p* values. Note that most scientific applications do not meet the restrictive conditions of this test and Boschloo’s exact test is more appropriate.
+		Creates an object representing the result of Fisher’s exact test for a single contingency table `C`. This is unrelated to Fisher’s method of combining *p* values. Note that, for most scientific applications, the restrictive conditions of this test are not met and Boschloo’s exact test is more appropriate.
+		
+		For automatic weighting, the sum over `C` is taken as the number of degrees of freedom.
 		
 		Parameters
 		----------
@@ -302,12 +328,14 @@ class CTR(object):
 				for x in range( max(0,n-n2), min(n,n1)+1 )
 			]
 		
-		return cls( p, possible_ps )
+		return cls( p, possible_ps, np.sum(C) )
 	
 	@classmethod
 	def boschloo_exact( cls, C, alternative="less", n=32, atol=1e-10 ):
 		"""
-		Creates an object representing the result of Boschloo’s exact for a single contingency table C using SciPy’s implementation.
+		Creates an object representing the result of Boschloo’s exact for a single contingency table `C` using SciPy’s implementation.
+		
+		For automatic weighting, the sum over `C` is taken as the number of degrees of freedom.
 		
 		Parameters
 		----------
@@ -355,7 +383,7 @@ class CTR(object):
 			else:
 				i += 1
 		
-		return cls( p, possible_ps )
+		return cls( p, possible_ps, np.sum(C) )
 
 combining_statistics = {
 	("fisher"          ,"normal"  ): lambda p:  np.sum( np.log(p)     , axis=0 ),
@@ -452,8 +480,10 @@ def combine(
 		* If "greater", the compound research hypothesis is that the subtests exhibit a trend towards high *p* values (close to 1). In this case, the method of choice will be applied to the complements of the *p* values (see `complements`).
 		* If "two-sided", the compound research hypothesis is that the subtests exhibit either of the two above trends. Beware that this is not necessarily the same as just doubling the *p* value of the respective one-sided test, since for some combining methods, a compound dataset may exhibit **both** trends.
 	
-	weights: iterable of numbers
+	weights: iterable of numbers or "dof"
 		Weights for individual results. Does not work for minimum-based methods (Tippett and Simes).
+		
+		If `"dof"`, each test will be weighted with its degrees of freedom, i.e., the number of samples that can independently affect the test’s result. As there is some potential for ambiguity as to what the degrees of freedom of a given test are, please check that they are what you expect by looking at the tests’ documentations or the attribute `dof` of a CombinableTestResult. This particularly applies when combining different tests.
 	
 	n_samples
 		Number of samples used for Monte Carlo simulation. High numbers increase the accuracy, but also the runtime and memory requirements.
@@ -534,6 +564,8 @@ def combine(
 			for x in ["p","q"]
 		}
 	
+	if isinstance(weights,str) and weights == "dof":
+		weights = [ ctr.dof for ctr in ctrs ]
 	if weights is not None:
 		data_null["w"] = data_orig["w"] = np.asarray(weights)
 	
@@ -581,6 +613,8 @@ def direction( ctrs, weights=None, method="mudholkar_george" ):
 				for x in ["p","q"]
 			}
 		
+		if weights == "dof":
+			weights = [ ctr.dof for ctr in ctrs ]
 		if weights is not None:
 			data_orig["w"] = np.asarray(weights)
 		

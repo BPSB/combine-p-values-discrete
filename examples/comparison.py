@@ -99,19 +99,19 @@ Once more with weights
 
 So far, we have treated the *p* values for each sub-dataset equally.
 However, the different sub-datasets differ considerably in size and thus meaningfulness, e.g., the first contains seven data points while the last only contains two.
-We can account for this by weighing the sub-datasets with their numbers of data points:
+We can account for this by weighting the sub-datasets with their degrees of freedom (number of samples minus one):
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 69-71
+	:lines: 69-70
 
 And like above, we can check this result by comparing to an explicit, computationally expensive simulation of the null hypothesis:
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
 	:dedent: 1
-	:lines: 73-85
+	:lines: 72-85
 
 """
 
@@ -185,14 +185,14 @@ if __name__ == "__main__":
 	print(p_from_simulation)
 	# 0.0016998300169983002
 	
-	weights = np.array([len(C)+len(T) for C,T in data])
-	print( combine(ctrs,method="fisher",weights=weights) )
-	# Combined_P_Value(pvalue=0.001098999890100011, std=1.0477080696699578e-05)
+	print( combine(ctrs,method="fisher",weights="dof") )
+	# Combined_P_Value(pvalue=0.0011117998888200112, std=1.0537855099673787e-05)
 	
 	def weighted_fisher_statistic(dataset,weights):
 		pvalues = [ mannwhitneyu(C,T,alternative="less").pvalue for C,T in dataset ]
 		return -2*weights.dot(np.log(pvalues))
 	
+	weights = np.array([len(C)+len(T)-1 for C,T in data])
 	weighted_data_statistic = weighted_fisher_statistic(data,weights)
 	weighted_null_statistic = [
 			weighted_fisher_statistic(null_sample(data),weights)

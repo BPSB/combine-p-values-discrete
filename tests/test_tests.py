@@ -22,14 +22,14 @@ def test_simple_mwu():
 	assert (
 		CTR.mann_whitney_u([0],[1],alternative="less")
 		==
-		CTR( 0.5, [0.5,1.0] )
+		CTR( 0.5, [0.5,1.0], 1 )
 	)
 
 def test_simple_signtest():
 	assert (
 		CTR.sign_test([0],[1],alternative="less")
 		==
-		CTR( 0.5, [0.5,1.0] )
+		CTR( 0.5, [0.5,1.0], 1 )
 	)
 
 @mark.parametrize("n",range(3,10))
@@ -46,7 +46,7 @@ def test_simple_wilcoxon(n,rng):
 	assert (
 		CTR.wilcoxon_signed_rank(data,alternative="less")
 		==
-		CTR( control_p, control_all_ps )
+		CTR( control_p, control_all_ps, n )
 	)
 
 @mark.parametrize(
@@ -58,14 +58,18 @@ def test_simple_wilcoxon(n,rng):
 		([1,2,2], [3,3,5], "greater",  2/3 , [ 2/3,           1 ]),
 	])
 def test_simple_spearman(x,y,alt,p,all_ps):
-	assert CTR.spearmanr( x, y, alternative=alt )._approx( CTR(p,all_ps) )
+	result = CTR.spearmanr( x, y, alternative=alt )
+	control = CTR(p,all_ps,len(x)-1)
+	assert result._approx(control)
 
 @mark.parametrize("alt",["less","greater"])
 def test_spearman_large_dataset(rng,alt):
-	x,y = rng.normal(size=(2,100))
+	n = 100
+	x,y = rng.normal(size=(2,n))
 	ctr = CTR.spearmanr(x,y,alternative=alt)
 	assert ctr.p == spearmanr(x,y,alternative=alt).pvalue
 	assert ctr.nulldist.continuous
+	assert ctr.dof == n-1
 
 def test_spearman_large_perfect_dataset():
 	n = 100
@@ -124,9 +128,10 @@ def test_spearman(n,rng):
 		([1,3,2,4], [4,5,0,6], "greater",   1/6  , [ 1/24, 1/6, 3/8, 5/8, 5/6, 23/24, 1 ]),
 	])
 def test_simple_kendall(x,y,alt,p,all_ps):
-	result = CTR.kendalltau( x, y, alternative=alt )
+	result = CTR.kendalltau(x,y,alternative=alt)
 	control_p = kendalltau(x,y,alternative=alt).pvalue
-	assert result._approx( CTR(p,all_ps) )
+	n = len(x)
+	assert result._approx( CTR(p,all_ps,n-1) )
 	assert np.isclose( result.p, control_p )
 
 @mark.parametrize(
@@ -140,7 +145,7 @@ def test_simple_kendall(x,y,alt,p,all_ps):
 def test_simple_fisher_exact(C,alt,p,all_ps):
 	result = CTR.fisher_exact( C, alternative=alt )
 	control_p = fisher_exact(C,alternative=alt)[1]
-	assert result._approx( CTR(p,all_ps) )
+	assert result._approx( CTR(p,all_ps,np.sum(C)) )
 	assert np.isclose( result.p, control_p )
 
 def test_simple_boschloo():
@@ -149,7 +154,8 @@ def test_simple_boschloo():
 	control_p = boschloo_exact(C,alternative="less" ).pvalue
 	assert np.isclose( result.p, control_p )
 	all_ps = [ 1/64, 0.079305, 0.273032, 11/32, 0.57860, 49/64, 1 ]
-	assert result._approx( CTR(0.079305,all_ps), atol=1e-5 )
+	control = CTR(0.079305,all_ps,np.sum(C))
+	assert result._approx(control,atol=1e-5)
 
 # -----------------
 

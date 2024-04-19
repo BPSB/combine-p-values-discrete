@@ -325,3 +325,29 @@ def test_complement_symmetry(method_A,method_B,weighted,rng):
 	
 	assert_matching_p_values( result_A, result_B, n=n_samples, compare=True )
 
+def test_automatic_weights(rng):
+	weights = []
+	ctrs = []
+	for _ in range(10):
+		size_x,size_y = rng.randint(1,10,size=2)
+		x = rng.random(size_x)
+		y = rng.random(size_y)
+		ctrs.append( CTR.mann_whitney_u(x,y,alternative="less") )
+		weights.append( size_x + size_y - 1 )
+	
+	seed = rng.randint(2**32)
+	automatic = combine(
+			ctrs,
+			weights = "dof",
+			RNG = np.random.RandomState(seed),
+			n_samples = n_samples
+		)
+	manual = combine(
+			ctrs,
+			weights = weights,
+			RNG = np.random.RandomState(seed),
+			n_samples = n_samples
+		)
+	assert automatic==manual
+
+
