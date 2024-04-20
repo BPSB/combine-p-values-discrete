@@ -99,7 +99,7 @@ Once more with weights
 
 So far, we have treated the *p* values for each sub-dataset equally.
 However, the different sub-datasets differ considerably in size and thus meaningfulness, e.g., the first contains seven data points while the last only contains two.
-We can account for this by weighting the sub-datasets with their degrees of freedom (number of samples minus one):
+We can account for this by weighting the sub-datasets with their degrees of freedom (number of samples minus one), which are stored with the test results for this purpose:
 
 .. literalinclude:: ../examples/comparison.py
 	:start-after: example-st\u0061rt
