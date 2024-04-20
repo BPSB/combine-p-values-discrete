@@ -11,7 +11,6 @@ from scipy.special import erfinv, factorial
 from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact, boschloo_exact, wilcoxon
 from scipy.stats._hypotests import _get_wilcoxon_distr
 from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
-from scipy.stats._stats_py import _ttest_finish
 from scipy.stats._mstats_basic import _kendall_p_exact
 from scipy.stats.distributions import hypergeom
 
