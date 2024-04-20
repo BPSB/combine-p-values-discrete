@@ -612,7 +612,7 @@ def direction( ctrs, weights=None, method="mudholkar_george" ):
 				for x in ["p","q"]
 			}
 		
-		if weights == "dof":
+		if isinstance(weights,str) and weights == "dof":
 			weights = [ ctr.dof for ctr in ctrs ]
 		if weights is not None:
 			data_orig["w"] = np.asarray(weights)
