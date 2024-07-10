@@ -10,7 +10,7 @@ from .pdist import PDist
 from scipy.special import erfinv, factorial
 from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact, boschloo_exact, wilcoxon
 from scipy.stats._hypotests import _get_wilcoxon_distr
-from scipy.stats._mannwhitneyu import _mwu_state, mannwhitneyu
+from scipy.stats._mannwhitneyu import _MWU, mannwhitneyu
 from scipy.stats._mstats_basic import _kendall_p_exact
 from scipy.stats.distributions import hypergeom
 
@@ -126,7 +126,7 @@ class CTR(object):
 			warn('Can only use `method="exact"`.')
 		
 		p = mannwhitneyu(x,y,method="exact",**kwargs).pvalue
-		possible_ps = [ _mwu_state.cdf(U,n,m) for U in range(n*m+1) ]
+		possible_ps = np.cumsum( _MWU(n,m).build_u_freqs_array(n*m) )
 		return cls( p, possible_ps, n+m-1 )
 	
 	@classmethod
