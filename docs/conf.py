@@ -18,7 +18,6 @@ extensions = [
 	"sphinx.ext.autodoc",
 	"sphinx.ext.autosummary",
 	"sphinx.ext.mathjax",
-	"matplotlib.sphinxext.plot_directive",
 	"numpydoc",
 ]
 
