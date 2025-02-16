@@ -4,8 +4,11 @@ from setuptools_scm import get_version
 from unittest.mock import MagicMock as Mock
 
 # Mocking to make RTD autobuild the documentation.
-#autodoc_mock_imports = ["numpy"]
-sys.modules.update([("numpy", Mock())])
+MOCK_MODULES = [
+		"numpy", "numpy.linalg",
+		"scipy", "scipy.stats", "scipy.special",
+	]
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 sys.path.insert(0,os.path.abspath("../combine_pvalues_discrete"))
 sys.path.insert(0,os.path.abspath("../examples"))
 
