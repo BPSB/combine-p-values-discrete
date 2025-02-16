@@ -1,0 +1,51 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+	"setuptools>=64",
+	"setuptools-scm>=7",
+]
+
+[project]
+name = "combine_pvalues_discrete"
+dynamic = ["version"]
+description = "A Python toolbox for combining p values from tests with a discrete statistics"
+readme = "README.rst"
+license = { text = "BSD-3-Clause" }
+authors = [
+	{ name = "Gerrit Ansmann", email = "gansmann@uni-koeln.de" },
+]
+requires-python = ">=3.7"
+classifiers = [
+	"License :: OSI Approved :: BSD License",
+	"Operating System :: POSIX",
+	"Operating System :: MacOS :: MacOS X",
+	"Operating System :: Microsoft :: Windows",
+	"Programming Language :: Python",
+	"Topic :: Scientific/Engineering",
+]
+dependencies = [
+	"numpy",
+	"scipy>=1.14",
+]
+
+[project.optional-dependencies]
+test = [
+	"symengine",
+	"pytest-runner",
+	"pytest-rng",
+	'statsmodels',
+]
+
+[project.urls]
+Documentation = "https://combine-p-values-discrete.readthedocs.io"
+Homepage = "https://github.com/BPSB/combine-p-values-discrete"
+
+[tool.setuptools.packages.find]
+include = [
+	"combine_pvalues_discrete*",
+]
+
+[tool.setuptools_scm]
+write_to = "combine_pvalues_discrete/version.py"
+local_scheme = "no-local-version"
+
