@@ -292,6 +292,49 @@ class CTR(object):
 		return cls(p,possible_ps,n-1)
 	
 	@classmethod
+	def pearson_with_permutations( cls, x, y, alternative="greater", n_resamples=10000, RNG=None ):
+		"""
+		Creates an object representing the result of a single Pearson’s r permutation test using SciPy’s `pearsonr` and `permutation_test` to compute *p* values.
+		
+		If the number of permutations is larger than the number of resamples (`n_resamples`), this will be treated as a continuous test.
+		
+		For automatic weighting, the number of degrees of freedom is taken to be one less than the number of pairs.
+		
+		Parameters
+		----------
+		x,y
+			The two arrays of samples to correlate.
+		
+		alternative: "greater" or "less"
+		
+		n_resamples
+			The maximum number of permutations used in the permutation test.
+		
+		RNG
+			NumPy random-number generator used for the permutations.
+			If `None`, it will be automatically generated.
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			dataset_A = [1,3,4,2,5,6]
+			dataset_B = [3,1,2,5,6,4]
+			ctr = CTR.pearson_with_permutations(dataset_A,dataset_B,alternative="greater")
+		"""
+		
+		return cls.permutation_test(
+				(x,y),
+				lambda x,y,axis = -1: pearsonr(x,y,axis=axis).statistic,
+				permutation_type = "pairings",
+				vectorized = True,
+				alternative = alternative,
+				n_resamples = n_resamples,
+				dof = len(x)-1,
+				rng = RNG,
+			)
+	
+	@classmethod
 	def fisher_exact( cls, C, alternative="less" ):
 		"""
 		Creates an object representing the result of Fisher’s exact test for a single contingency table `C`. This is unrelated to Fisher’s method of combining *p* values. Note that, for most scientific applications, the restrictive conditions of this test are not met and Boschloo’s exact test is more appropriate.
