@@ -153,24 +153,38 @@ def test_complete_permutation_test(x,y,alt,p,all_ps):
 	assert result._approx( CTR(p,all_ps,n-1) )
 	assert np.isclose( result.p, control_p )
 
+@mark.parametrize(
+		"   x   ,    y   ,    alt   ,  p ,                all_ps         ",
+	[
+		([1,2,3], [0,4,5], "less"   ,  1 , [ 1/6, 1/3, 1/2, 2/3, 5/6, 1 ]),
+		([1,2,3], [0,4,5], "greater", 1/6, [ 1/6, 1/3, 1/2, 2/3, 5/6, 1 ]),
+	])
+def test_complete_pearson_permutation_test(x,y,alt,p,all_ps):
+	n = len(x)
+	result = CTR.pearson_with_permutations( x, y, alternative = alt )
+	assert result._approx( CTR(p,all_ps,n-1) )
+
 @mark.parametrize("alt",["less","greater"])
 @mark.parametrize("size",range(10,100,10))
 def test_incomplete_permutation_test(alt,size,rng):
 	data = rng.normal(size=(2,size))
-	result = CTR.permutation_test(
+	result_perm = CTR.permutation_test(
 				list(data),
 				lambda x,y,axis = -1: pearsonr(x,y,axis=axis).statistic,
 				vectorized = True,
 				permutation_type = "pairings",
 				alternative = alt,
 				dof = size-1,
+				rng = rng
 			)
+	result_pearson = CTR.pearson_with_permutations( *data, alternative=alt, RNG=rng )
 	control = CTR(
 			pearsonr(*data,alternative=alt).pvalue,
 			all_ps = None,
 			dof = size-1
 		)
-	assert result._approx( control, atol=1/np.sqrt(size) )
+	assert result_perm._approx( control, atol=1/np.sqrt(size) )
+	assert result_pearson._approx( control, atol=1/np.sqrt(size) )
 
 @mark.parametrize(
 		"      C      ,   alt    ,    p    ,            all_ps            ",

@@ -470,7 +470,6 @@ class CTR(object):
 					alternative = kwargs["alternative"],
 					exact = True,
 				)
-			print(result.pvalue,possible_ps)
 			return cls(result.pvalue,possible_ps,dof=dof)
 		else:
 			return cls(result.pvalue,dof=dof)
