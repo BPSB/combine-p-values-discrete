@@ -1,6 +1,6 @@
 from collections import namedtuple
 import numpy as np
-from scipy.stats import binomtest, kstwo, boschloo_exact, fisher_exact
+from scipy.stats import binomtest, kstwo, boschloo_exact, fisher_exact, rankdata
 
 def is_empty(x):
 	"""
@@ -77,7 +77,7 @@ Combined_P_Value = namedtuple("Combined_P_Value",("pvalue","std"))
 
 def counted_p(orig_stat,null_stats,**tols):
 	"""
-	Estimates the p value of a statistic (`orig_stat`) by comparing with the statistic for samples of a null model (`null_stats`), with a small statistic being extreme. Returns the p value and its (estimated) standard deviation when estimating with this method.
+	Estimates the p value of a statistic (`orig_stat`) by comparing with the statistic for samples of a null model (`null_stats`), with a small statistic being extreme, i.e., like `alternative="less"`. Returns the p value and its (estimated) standard deviation when estimating with this method.
 	"""
 	
 	null_stats = np.asarray(null_stats)
@@ -96,6 +96,19 @@ def std_from_true_p(true_p,size):
 	Standard deviation of p value from samples, if the true p value is known.
 	"""
 	return np.sqrt(true_p*(1-true_p)*size)/(size+1)
+
+def p_values_from_nulldist(nulldist,alternative="less"):
+	"""
+	Returns the distribution of possible p values from samples of a null distribution of a characteristic.
+	"""
+	
+	if alternative=="less":
+		n = len(nulldist)
+		return (np.append(0,np.unique(rankdata(nulldist,method="max")))+1)/(n+1)
+	elif alternative=="greater":
+		return p_values_from_nulldist(-nulldist)
+	else:
+		raise ValueError('Alternative must be "less" or "greater".')
 
 def assert_matching_p_values(tested_ps,target_ps,n,threshold=1e-4,compare=False):
 	"""

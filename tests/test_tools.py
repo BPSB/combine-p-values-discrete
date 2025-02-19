@@ -10,6 +10,7 @@ from combine_pvalues_discrete.tools import (
 		has_ties,
 		sign_test,
 		counted_p, std_from_true_p,
+		p_values_from_nulldist,
 		assert_matching_p_values, assert_discrete_uniform,
 	)
 
@@ -90,6 +91,7 @@ def test_counted_p():
 	assert counted_p(0.5,null_stats).pvalue == 0.1
 	assert counted_p(3.5,null_stats).pvalue == 0.4
 	assert counted_p(10 ,null_stats).pvalue == 1.0
+	assert counted_p(10 ,null_stats).pvalue == 1.0
 	assert counted_p(0.7,null_stats,atol=0.2).pvalue == 0.1
 	assert counted_p(0.9,null_stats,atol=0.2).pvalue == 0.2
 	assert counted_p(4.1,null_stats,atol=0.2).pvalue == 0.5
@@ -130,6 +132,22 @@ def test_std_counted_p(rng):
 	np.testing.assert_allclose( true_stds, empirical_stds, rtol=3/np.sqrt(m) )
 	np.testing.assert_allclose( true_stds[:-1], np.mean(estimated_stds,axis=0)[:-1], rtol=3/np.sqrt(m) )
 	# Last element is expected to be unequal, because the estimate cannot reasonably be zero.
+
+@mark.parametrize("size",range(10,100,10))
+@mark.parametrize("alternative",["less","greater"])
+def test_p_values_from_nulldist(size,alternative,rng):
+	nulldist = rng.randint(0,10,size)
+	
+	result = p_values_from_nulldist(nulldist,alternative=alternative)
+	
+	values = nulldist if alternative=="less" else -nulldist
+	control = {
+			counted_p(value+eps,values).pvalue
+			for value in values
+			for eps in [-0.2,0,0.2]
+		}
+	
+	assert control == set(result)
 
 def test_assert_matching_p_values_one_sample():
 	assert_matching_p_values(0.04,0.05,n=30)
