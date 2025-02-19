@@ -412,6 +412,7 @@ class CTR(object):
 				vectorized = True,
 				alternative = "greater",
 				n_resamples = 100000,
+				dof = len(dataset_A)-1,
 			)
 		"""
 		
