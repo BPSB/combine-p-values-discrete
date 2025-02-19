@@ -135,17 +135,24 @@ def test_std_counted_p(rng):
 
 @mark.parametrize("size",range(10,100,10))
 @mark.parametrize("alternative",["less","greater"])
-def test_p_values_from_nulldist(size,alternative,rng):
+@mark.parametrize("exact",[False,True])
+def test_p_values_from_nulldist(size,alternative,exact,rng):
 	nulldist = rng.randint(0,10,size)
 	
-	result = p_values_from_nulldist(nulldist,alternative=alternative)
+	result = p_values_from_nulldist(nulldist,alternative=alternative,exact=exact)
 	
 	values = nulldist if alternative=="less" else -nulldist
-	control = {
-			counted_p(value+eps,values).pvalue
-			for value in values
-			for eps in [-0.2,0,0.2]
-		}
+	if exact:
+		control = {
+				np.average(values<=value)
+				for value in values
+			}
+	else:
+		control = {
+				counted_p(value+eps,values).pvalue
+				for value in values
+				for eps in [-0.2,0,0.2]
+			}
 	
 	assert control == set(result)
 

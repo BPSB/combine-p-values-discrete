@@ -97,16 +97,19 @@ def std_from_true_p(true_p,size):
 	"""
 	return np.sqrt(true_p*(1-true_p)*size)/(size+1)
 
-def p_values_from_nulldist(nulldist,alternative="less"):
+def p_values_from_nulldist(nulldist,alternative="less",exact=True):
 	"""
 	Returns the distribution of possible p values from samples of a null distribution of a characteristic.
 	"""
 	
 	if alternative=="less":
 		n = len(nulldist)
-		return (np.append(0,np.unique(rankdata(nulldist,method="max")))+1)/(n+1)
+		if exact:
+			return np.unique(rankdata(nulldist,method="max"))/n
+		else:
+			return (np.append(0,np.unique(rankdata(nulldist,method="max")))+1)/(n+1)
 	elif alternative=="greater":
-		return p_values_from_nulldist(-nulldist)
+		return p_values_from_nulldist(-nulldist,exact=exact)
 	else:
 		raise ValueError('Alternative must be "less" or "greater".')
 
