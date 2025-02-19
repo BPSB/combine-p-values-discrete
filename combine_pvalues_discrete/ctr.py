@@ -4,11 +4,11 @@ import numpy as np
 from warnings import warn
 from itertools import permutations
 
-from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, has_ties
+from .tools import sign_test, counted_p, Combined_P_Value, is_empty, searchsorted_closest, has_ties, p_values_from_nulldist
 from .pdist import PDist
 
 from scipy.special import erfinv, factorial
-from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact, boschloo_exact, wilcoxon
+from scipy.stats import rankdata, spearmanr, pearsonr, kendalltau, fisher_exact, boschloo_exact, wilcoxon, permutation_test, pearsonr
 from scipy.stats._hypotests import _get_wilcoxon_distr
 from scipy.stats._mannwhitneyu import _MWU, mannwhitneyu
 from scipy.stats._mstats_basic import _kendall_p_exact
@@ -184,7 +184,6 @@ class CTR(object):
 		"""
 		
 		assert_one_sided(alternative)
-		
 		d = np.asarray(x) - (y or 0)
 		if has_ties(np.abs(d)) or np.any(d==0):
 			raise NotImplementedError("Ties and zeros are not yet implemented.")
@@ -383,6 +382,54 @@ class CTR(object):
 				i += 1
 		
 		return cls( p, possible_ps, np.sum(C) )
+	
+	@classmethod
+	def permutation_test( cls, *args, dof=None, **kwargs ):
+		"""
+		Creates an object representing the result of a single permutation test using SciPy’s `permutation_test` to compute *p* values.
+		If the number of permutations is larger than `n_resamples`, the test will be treated as a continuous test.
+		
+		Parameters
+		----------
+		*args and **kwargs
+			positional and keyword arguments to be forwarded to `permutation_test`
+		
+		dof
+			number of degrees of freedom for automatic weighing
+		
+		alternative: "greater" or "less"
+		
+		Examples
+		--------
+		.. code-block:: python3
+		
+			dataset_A = [1,3,4,2,5,6]
+			dataset_B = [3,1,2,5,6,4]
+			ctr = CTR.permutation_test(
+				(dataset_A,dataset_B),
+				lambda x,y,axis = -1: pearsonr(x,y,axis=axis).statistic,
+				permutation_type = "pairings",
+				vectorized = True,
+				alternative = "greater",
+				n_resamples = 100000,
+			)
+		"""
+		
+		assert_one_sided(kwargs["alternative"])
+		kwargs.setdefault("n_resamples",9999)
+		
+		result = permutation_test(*args,**kwargs)
+		
+		if len(result.null_distribution) < kwargs["n_resamples"]:
+			possible_ps = p_values_from_nulldist(
+					result.null_distribution,
+					alternative = kwargs["alternative"],
+					exact = True,
+				)
+			print(result.pvalue,possible_ps)
+			return cls(result.pvalue,possible_ps,dof=dof)
+		else:
+			return cls(result.pvalue,dof=dof)
 
 combining_statistics = {
 	("fisher"          ,"normal"  ): lambda p:  np.sum( np.log(p)     , axis=0 ),

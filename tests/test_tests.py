@@ -4,7 +4,7 @@ import numpy as np
 from scipy.stats import (
 		mannwhitneyu,
 		wilcoxon,
-		spearmanr, kendalltau,
+		spearmanr, kendalltau, pearsonr,
 		fisher_exact, boschloo_exact,
 	)
 import math
@@ -133,6 +133,44 @@ def test_simple_kendall(x,y,alt,p,all_ps):
 	n = len(x)
 	assert result._approx( CTR(p,all_ps,n-1) )
 	assert np.isclose( result.p, control_p )
+
+@mark.parametrize(
+		"    x    ,     y    ,    alt   ,    p   ,                all_ps                 ",
+	[
+		([1,3,2,4], [4,5,0,6], "less"   ,  23/24 , [ 1/24, 1/6, 3/8, 5/8, 5/6, 23/24, 1 ]),
+		([1,3,2,4], [4,5,0,6], "greater",   1/6  , [ 1/24, 1/6, 3/8, 5/8, 5/6, 23/24, 1 ]),
+	])
+def test_complete_permutation_test(x,y,alt,p,all_ps):
+	n = len(x)
+	result = CTR.permutation_test(
+				(x,y),
+				lambda x,y: kendalltau(x,y).statistic,
+				permutation_type = "pairings",
+				alternative = alt,
+				dof = n-1,
+			)
+	control_p = kendalltau(x,y,alternative=alt).pvalue
+	assert result._approx( CTR(p,all_ps,n-1) )
+	assert np.isclose( result.p, control_p )
+
+@mark.parametrize("alt",["less","greater"])
+@mark.parametrize("size",range(10,100,10))
+def test_incomplete_permutation_test(alt,size,rng):
+	data = rng.normal(size=(2,size))
+	result = CTR.permutation_test(
+				list(data),
+				lambda x,y,axis = -1: pearsonr(x,y,axis=axis).statistic,
+				vectorized = True,
+				permutation_type = "pairings",
+				alternative = alt,
+				dof = size-1,
+			)
+	control = CTR(
+			pearsonr(*data,alternative=alt).pvalue,
+			all_ps = None,
+			dof = size-1
+		)
+	assert result._approx( control, atol=1/np.sqrt(size) )
 
 @mark.parametrize(
 		"      C      ,   alt    ,    p    ,            all_ps            ",
