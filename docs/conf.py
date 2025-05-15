@@ -15,6 +15,7 @@ extensions = [
 	"sphinx.ext.autodoc",
 	"sphinx.ext.autosummary",
 	"sphinx.ext.mathjax",
+	"matplotlib.sphinxext.plot_directive",
 	"numpydoc",
 ]
 
@@ -36,6 +37,9 @@ add_module_names = False
 html_theme = "nature"
 pygments_style = "colorful"
 htmlhelp_basename = "Combine_p_Values_Discrete_doc"
+
+plot_html_show_formats = False
+plot_html_show_source_link = False
 
 numpydoc_show_class_members = False
 autodoc_member_order = "bysource"

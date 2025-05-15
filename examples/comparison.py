@@ -113,6 +113,34 @@ And like above, we can check this result by comparing to an explicit, computatio
 	:dedent: 1
 	:lines: 72-85
 
+.. _badluck:
+
+Was it just bad luck?
+`````````````````````
+
+At this point one might say that we got (un)lucky with our dataset.
+To demonstrate that using methods for combining continuous *p* values systematically fails, we can also look at what happens if the null hypothesis holds.
+To this end, we apply the entire combination procedure to random data.
+This general approach is also a way to see whether you need this module, even if your particular test isn’t implemented.
+
+We generate null datasets using our function above, apply the Mann–Whitney *U* to the sub-datasets, and finally combine the resulting *p* values using Fisher’s method (for continous tests).
+We repeat this `n=10000` times and collect the resulting *p* values.
+Note that the only thing we use from our original dataset here is its structure, i.e., the sample sizes.
+
+.. literalinclude:: ../examples/comparison.py
+	:start-after: example-st\u0061rt
+	:dedent: 1
+	:lines: 87-91
+
+As our datasets conform with the null hypothesis per construction, the *p* values should be uniformly distributed between 0 and 1.
+Plotting the distribution suffices to see that this is not the case and instead *p* values from continuous combination are systematically higher:
+
+.. literalinclude:: ../examples/comparison.py
+	:start-after: example-st\u0061rt
+	:dedent: 1
+	:lines: 93-99
+
+.. plot:: ../examples/comparison.py
 """
 
 if __name__ == "__main__":
@@ -203,3 +231,17 @@ if __name__ == "__main__":
 	print(weighted_p_from_simulation)
 	# 0.0010998900109989002
 	
+	null_ps = []
+	for _ in range(n):
+		null_dataset = null_sample(data)
+		pvalues = [ mannwhitneyu(C,T,alternative="less").pvalue for C,T in null_dataset ]
+		null_ps.append(combine_pvalues(pvalues,method="fisher")[1])
+	
+	from matplotlib.pyplot import subplots
+	fig,axes = subplots()
+	axes.ecdf(null_ps,label="actual")
+	axes.plot([0,1],[0,1],label="expected")
+	axes.set_xlabel("$p$ value from combination for continuous tests")
+	axes.set_ylabel("CDF or actual $p$ value")
+	axes.legend()
+
