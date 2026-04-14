@@ -10,13 +10,12 @@ name = "combine_pvalues_discrete"
 dynamic = ["version"]
 description = "A Python toolbox for combining p values from tests with a discrete statistics"
 readme = "README.rst"
-license = { text = "BSD-3-Clause" }
+license = "BSD-3-Clause"
 authors = [
 	{ name = "Gerrit Ansmann", email = "gansmann@uni-koeln.de" },
 ]
 requires-python = ">=3.7"
 classifiers = [
-	"License :: OSI Approved :: BSD License",
 	"Operating System :: POSIX",
 	"Operating System :: MacOS :: MacOS X",
 	"Operating System :: Microsoft :: Windows",
